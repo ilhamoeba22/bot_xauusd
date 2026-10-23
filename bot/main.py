@@ -605,18 +605,57 @@ class Bot:
                 if (c - new) * p.dir > 0:
                     new, stage = c, ("KETAT" if tight else "TRAIL")
             # Dark Venus TP: close saat harga menyentuh garis tengah Bollinger (BB Middle Band)
+            # Ditambah fitur HYBRID SPLIT EXIT: tiket reguler TP di Mid, tiket runner SL+ di Mid & kejar Opposite Band
             if ex.get("close_on_bb_mid") and len(r) >= 25:
                 bb_n = int(ex.get("bb_period", 20))
+                bb_dev = float(ex.get("bb_dev", 2.0))
                 closes = [float(x["close"]) for x in r[-bb_n:]]
                 mid_val = sum(closes) / len(closes)
-                if p.dir == 1 and cur >= mid_val and (cur - p.price_open) > 0:
-                    if self.ex.close(p, "bb_mid"):
-                        log.info(f"TUTUP  {p.symbol} #{p.ticket} TP BB Mid tercapai @ {cur:.2f} >= {mid_val:.2f}")
-                        continue
-                elif p.dir == -1 and cur <= mid_val and (p.price_open - cur) > 0:
-                    if self.ex.close(p, "bb_mid"):
-                        log.info(f"TUTUP  {p.symbol} #{p.ticket} TP BB Mid tercapai @ {cur:.2f} <= {mid_val:.2f}")
-                        continue
+                variance = sum((x - mid_val) ** 2 for x in closes) / len(closes)
+                std_dev = variance ** 0.5
+                upper_val = mid_val + bb_dev * std_dev
+                lower_val = mid_val - bb_dev * std_dev
+
+                same_pos = [pos for pos in self.ex.positions() if pos.symbol == p.symbol and pos.dir == p.dir]
+                use_runner = bool(ex.get("bb_mid_runner", True))
+                runner_map = self.st.setdefault("runner_tickets", {})
+                runner_ticket = max((pos.ticket for pos in same_pos), default=p.ticket)
+                is_runner = use_runner and ((p.ticket == runner_ticket and len(same_pos) > 1) or str(p.ticket) in runner_map)
+                if is_runner:
+                    runner_map[str(p.ticket)] = True
+
+                if not is_runner:
+                    if p.dir == 1 and cur >= mid_val and (cur - p.price_open) > 0:
+                        if self.ex.close(p, "bb_mid"):
+                            log.info(f"TUTUP  {p.symbol} #{p.ticket} TP BB Mid tercapai @ {cur:.2f} >= {mid_val:.2f}")
+                            continue
+                    elif p.dir == -1 and cur <= mid_val and (p.price_open - cur) > 0:
+                        if self.ex.close(p, "bb_mid"):
+                            log.info(f"TUTUP  {p.symbol} #{p.ticket} TP BB Mid tercapai @ {cur:.2f} <= {mid_val:.2f}")
+                            continue
+                else:
+                    if p.dir == 1 and cur >= upper_val and (cur - p.price_open) > 0:
+                        if self.ex.close(p, "bb_opposite"):
+                            runner_map.pop(str(p.ticket), None)
+                            log.info(f"TUTUP  {p.symbol} #{p.ticket} TP RUNNER Upper Band tercapai @ {cur:.2f} >= {upper_val:.2f} (profit {cur - p.price_open:+.2f} pts!)")
+                            continue
+                    elif p.dir == -1 and cur <= lower_val and (p.price_open - cur) > 0:
+                        if self.ex.close(p, "bb_opposite"):
+                            runner_map.pop(str(p.ticket), None)
+                            log.info(f"TUTUP  {p.symbol} #{p.ticket} TP RUNNER Lower Band tercapai @ {cur:.2f} <= {lower_val:.2f} (profit {p.price_open - cur:+.2f} pts!)")
+                            continue
+
+                    buf = float(ex.get("bb_mid_runner_buffer_atr", 0.2)) * a
+                    if p.dir == 1 and cur >= mid_val:
+                        target_sl = round(mid_val - buf, info.digits)
+                        if target_sl > p.price_open and (p.sl is None or target_sl > p.sl):
+                            if self.ex.modify_sl(p, target_sl):
+                                log.info(f"TRAIL  {p.symbol} #{p.ticket} SL+MID  SL {p.sl} -> {target_sl} (Runner aktif mengejar Upper {upper_val:.2f})")
+                    elif p.dir == -1 and cur <= mid_val:
+                        target_sl = round(mid_val + buf, info.digits)
+                        if target_sl < p.price_open and (p.sl is None or target_sl < p.sl or p.sl == 0):
+                            if self.ex.modify_sl(p, target_sl):
+                                log.info(f"TRAIL  {p.symbol} #{p.ticket} SL+MID  SL {p.sl} -> {target_sl} (Runner aktif mengejar Lower {lower_val:.2f})")
 
             # trailing ikut candle: SL ke low (BUY) / high (SELL) candle yang BARU tertutup, tidak pernah mundur
             if ex.get("candle_trail") and fav >= ex.get("candle_trail_after_atr", ex["be_trigger_atr"]) * a:

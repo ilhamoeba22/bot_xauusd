@@ -1,8 +1,8 @@
 {
   "_catatan": "Bot Scalping Gold Universal — kompatibel semua broker MT5. Ganti blok broker sesuai akun Anda.",
-  "mode": "demo",
+  "mode": "live",
   "_mode_catatan": "paper = simulasi internal (TIDAK kirim order). demo = order sungguhan, HANYA mau jalan di akun DEMO. live = akun REAL, wajib live_trading_confirmed=true (lihat README bagian 'Sebelum mode live').",
-  "live_trading_confirmed": false,
+  "live_trading_confirmed": true,
   "magic": 260901,
   "comment_tag": "xau-scalp",
   "mt5": {
@@ -19,8 +19,8 @@
     "_keep_awake_catatan": "display = cegah idle-sleep & layar mati selama bot jalan (Modern Standby mematikan proses bot 25 Sep). system = sistem saja. off = tidak diatur. Tutup lid / Sleep manual tetap menidurkan laptop."
   },
   "risk": {
-    "risk_per_trade_pct": 0.12,
-    "max_risk_overshoot_mult": 1.5,
+    "risk_per_trade_pct": 0.45,
+    "max_risk_overshoot_mult": 2.0,
     "_overshoot_catatan": "Kalau lot minimum broker memaksa risiko > risk_per_trade_pct x angka ini, entry DILEWATI.",
     "max_positions_total": 6,
     "daily_loss_limit_pct": 3.0,
@@ -32,7 +32,7 @@
     "burst_size": 3,
     "burst_mode": "multiply",
     "_burst_catatan": "multiply = tiap tiket membawa risk_per_trade_pct penuh (10 tiket x 0.15% = 1.5% per sinyal; riil ~1.9% karena lot minimum 0.01 ~0.19%/tiket di akun Zero), hanya SATU burst aktif per simbol. split = lot dibagi, total risiko tetap risk_per_trade_pct.",
-    "max_total_risk_pct": 0.6,
+    "max_total_risk_pct": 2.5,
     "_max_total_risk_catatan": "Batas risiko TERBUKA gabungan semua simbol (posisi yang SL-nya sudah terkunci untung tidak dihitung). XAUUSD & XAUUSD247 bergerak identik; 1.5 = tepat satu burst 10 tiket berisiko pada satu waktu (burst simbol kedua baru boleh setelah burst pertama terkunci BE). Backtest burst 10: DD ~26% (vs 8.7% burst 3).",
     "daily_budget_gate": true,
     "_daily_budget_catatan": "Burst baru hanya dibuka kalau P/L hari ini - risiko terbuka - risiko burst baru masih di atas -daily_loss_limit_pct (rem harian tidak bisa 'terlewati' oleh burst yang kalah bersamaan).",
@@ -40,7 +40,7 @@
   },
   "symbols": {
     "XAUUSD": {
-      "enabled": true,
+      "enabled": false,
       "timeframe": "M3",
       "max_positions": 3,
       "risk_mult": 1.0,
@@ -57,18 +57,19 @@
       "strategy": "bb_reversion"
     },
     "XAUUSDc": {
-      "enabled": false,
-      "timeframe": "M5",
-      "max_positions": 2,
+      "enabled": true,
+      "timeframe": "M3",
+      "max_positions": 3,
       "risk_mult": 1.0,
-      "max_spread_points": 250,
+      "max_spread_points": 60,
       "commission_price_units": 0.0,
-      "deviation_points": 40,
+      "deviation_points": 30,
       "lot_min_override": 0,
       "lot_max_override": 5.0,
       "_catatan": "Hanya ada di akun Standard CENT (saldo dalam USC). Akun 279718110 yang sekarang login TIDAK punya simbol ini â€” bot otomatis melewatinya dengan peringatan.",
-      "max_spread_atr_pct": 40.0,
-      "risk_group": "gold"
+      "max_spread_atr_pct": 25.0,
+      "risk_group": "gold",
+      "strategy": "bb_reversion"
     },
     "XAUUSD247": {
       "enabled": false,
@@ -167,7 +168,11 @@
     "close_on_opposite_signal": true,
     "max_hold_bars": 36,
     "close_on_bb_mid": true,
-    "_bb_mid_catatan": "true = take profit otomatis saat harga menyentuh garis tengah Bollinger Bands (SMA 20) ala Dark Venus"
+    "_bb_mid_catatan": "true = take profit otomatis saat harga menyentuh garis tengah Bollinger Bands (SMA 20) ala Dark Venus",
+    "bb_mid_runner": true,
+    "bb_mid_runner_count": 1,
+    "bb_mid_runner_buffer_atr": 0.2,
+    "_hybrid_catatan": "Hybrid Exit: tiket 1 & 2 TP di BB Mid, tiket 3 runner SL+ di BB Mid & kejar Opposite Band"
   },
   "sessions": {
     "asia": {
@@ -333,7 +338,7 @@
   "risk_profiles": {
     "_catatan": "Profil mengalikan nilai dasar per simbol (risk.* & symbols.<SYM>.risk = nilai dasar/NORMAL). risk_mult: % risiko per tiket (dijepit risk_per_trade_cap_pct). positions_mult: slot grup & batas risiko terbuka grup (burst ikut dipangkas bila slot < burst). bursts_per_symbol: burst aktif bersamaan per simbol. min_score: skor sinyal minimum 0-100 (rata-rata berbobot skill penilai yang ON). smc_required: true = entry wajib searah bias SMC, false = SMC hanya pemberat skor. cooldown_min: jeda antar-entry per simbol. intrabar_entry: boleh entry di candle berjalan bila sinyal bertahan intrabar_confirm_sec. trail_atr_mult: pengali ATR trailing (trailing TIDAK bisa dimatikan profil). Rem harian/HALT/akun tidak disentuh profil.",
     "default": "AGGRESSIVE",
-    "allow_aggressive_live": false,
+    "allow_aggressive_live": true,
     "risk_per_trade_cap_pct": 0.6,
     "profiles": {
       "CONSERVATIVE": {
@@ -414,7 +419,8 @@
       "use_rsi": false,
       "_rsi_catatan": "false = Pure Zone trading tanpa filter RSI",
       "use_trend_filter": false,
-      "min_bandwidth_atr": 0.0
+      "min_bandwidth_atr": 1.5,
+      "_min_bw_catatan": "1.5x ATR = pita BB minimal ~5 poin; menolak entry saat BB sempit/squeeze"
     },
     "filters": []
   }
