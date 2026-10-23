@@ -69,7 +69,15 @@
       "_catatan": "Hanya ada di akun Standard CENT (saldo dalam USC). Akun 279718110 yang sekarang login TIDAK punya simbol ini â€” bot otomatis melewatinya dengan peringatan.",
       "max_spread_atr_pct": 25.0,
       "risk_group": "gold",
-      "strategy": "bb_reversion"
+      "strategy": "bb_reversion",
+      "trade_days": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "_trade_days_catatan": "[0,1,2,3,4] = Senin s/d Jumat saja; otomatis libur dan tidak trading saat weekend (Sabtu-Minggu)"
     },
     "XAUUSD247": {
       "enabled": false,
