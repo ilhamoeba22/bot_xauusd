@@ -1,0 +1,31 @@
+{
+  "_catatan": "Profil Exness Zero (akun lama). Komisi $3.5/lot, spread sangat rendah 10-20 poin.",
+  "broker": {
+    "name": "Exness-Zero",
+    "account_type": "zero",
+    "commission_per_lot_usd": 3.5,
+    "typical_spread_xauusd": 15,
+    "_setup": "1. Login akun Exness Zero di MT5. 2. Ubah config.json -> broker. 3. Simbol XAUUSD dan XAUUSD247 tersedia. 4. XAUUSDc aktifkan hanya untuk akun Standard Cent."
+  },
+  "symbols": {
+    "XAUUSD": {
+      "enabled": true,
+      "max_spread_points": 40,
+      "max_spread_atr_pct": 15.0,
+      "commission_price_units": 0.0,
+      "deviation_points": 20,
+      "lot_min_override": 0,
+      "lot_max_override": 1.0
+    },
+    "XAUUSD247": {
+      "enabled": true,
+      "_catatan": "Hanya tersedia di Exness. Aktifkan untuk trading Sabtu-Minggu.",
+      "max_spread_points": 80,
+      "max_spread_atr_pct": 30.0,
+      "deviation_points": 30,
+      "lot_min_override": 0,
+      "lot_max_override": 0.5
+    },
+    "XAUUSDc": {"enabled": false}
+  }
+}

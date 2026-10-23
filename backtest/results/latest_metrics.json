@@ -1,0 +1,40 @@
+{
+  "generated": "2026-10-21T10:58:16",
+  "config": "D:\\Pribadi\\TRADE\\AI ILHAM\\XAUUSD Trading Bot\\config\\config.json",
+  "fingerprint": null,
+  "timeframe": "M5",
+  "months": 1,
+  "results": {
+    "PORTFOLIO": {
+      "trades": 55,
+      "trades_per_day": 2.57,
+      "win_rate_pct": 56.36,
+      "profit_factor": 1.368,
+      "expectancy_R": 0.0097,
+      "avg_win_R": 0.731,
+      "avg_loss_R": -0.921,
+      "max_drawdown_pct": -1.37,
+      "return_pct": 1.5,
+      "max_consecutive_losses": 5,
+      "period": "2026-08-31 s/d 2026-09-30",
+      "split_half_PF": [
+        1.07,
+        1.797
+      ],
+      "verdict": "TIDAK CUKUP DATA (<100 trade) \u2014 jangan live."
+    },
+    "XAUUSD": {
+      "trades": 55,
+      "trades_per_day": 2.57,
+      "win_rate_pct": 56.36,
+      "profit_factor": 1.368,
+      "expectancy_R": 0.0097,
+      "avg_win_R": 0.731,
+      "avg_loss_R": -0.921,
+      "max_drawdown_pct": -1.37,
+      "return_pct": 1.5,
+      "max_consecutive_losses": 5,
+      "period": "2026-08-31 s/d 2026-09-30"
+    }
+  }
+}

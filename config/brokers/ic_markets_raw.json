@@ -1,0 +1,23 @@
+{
+  "_catatan": "Profil IC Markets Raw Spread — komisi $7/lot, spread sangat rendah. Copy isi ini ke config.json -> blok broker.",
+  "broker": {
+    "name": "IC-Markets-Raw",
+    "account_type": "raw",
+    "commission_per_lot_usd": 7.0,
+    "typical_spread_xauusd": 20,
+    "_setup": "1. Login akun IC Markets Raw di MT5. 2. Ubah config.json -> broker -> name='IC-Markets-Raw', commission_per_lot_usd=7.0, typical_spread_xauusd=20. 3. Pastikan simbol XAUUSD tersedia (Market Watch). 4. Nonaktifkan XAUUSD247 dan XAUUSDc (tidak ada di IC Markets)."
+  },
+  "symbols": {
+    "XAUUSD": {
+      "enabled": true,
+      "max_spread_points": 50,
+      "max_spread_atr_pct": 20.0,
+      "commission_price_units": 0.0,
+      "deviation_points": 20,
+      "lot_min_override": 0,
+      "lot_max_override": 1.0
+    },
+    "XAUUSD247": {"enabled": false},
+    "XAUUSDc": {"enabled": false}
+  }
+}

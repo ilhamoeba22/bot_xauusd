@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XAUUSD Scalping Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+<style>
+:root{
+  /* TEMA WARNA NEON CYBERPUNK: #FF00CB & #00B2FF */
+  --neon-pink: #FF00CB;
+  --neon-cyan: #00B2FF;
+  --neon-pink-soft: rgba(255, 0, 203, 0.18);
+  --neon-cyan-soft: rgba(0, 178, 255, 0.18);
+  --neon-pink-glow: rgba(255, 0, 203, 0.35);
+  --neon-cyan-glow: rgba(0, 178, 255, 0.35);
+
+  /* Permukaan bertema deep neon dark */
+  --bg: #070913;
+  --panel: #0e1322;
+  --panel2: #151c32;
+  --line: #1d2645;
+  --line2: #2b3864;
+
+  /* TEMA TEKS TERPUSAT */
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-tertiary: #64748B;
+  --bg-tooltip: #101528;
+  --border-tooltip: var(--neon-cyan);
+  --text-on-tooltip: #F8FAFC;
+  --text: var(--text-primary);
+  --muted: var(--text-secondary);
+  --faint: var(--text-tertiary);
+
+  /* Status */
+  --ok: #10b981;
+  --warn: #f59e0b;
+  --err: #ef4444;
+  --off: #475569;
+
+  /* Arah & lapisan chart terintegrasi tema #00B2FF dan #FF00CB */
+  --up: var(--neon-cyan);
+  --down: var(--neon-pink);
+  --gold: #facc15;
+  --blue: var(--neon-cyan);
+  --purple: var(--neon-pink);
+  --teal: #22d3ee;
+  --orange: #fb923c;
+  --gray: #94a3b8;
+  --cyan: var(--neon-cyan);
+  --pink: var(--neon-pink);
+  --mono: "Cascadia Mono","Consolas","SFMono-Regular",ui-monospace,monospace;
+  --sans: "Segoe UI",system-ui,-apple-system,sans-serif;
+  --gap: 12px; --radius: 8px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background-color:#060810;
+  background-image:
+    linear-gradient(rgba(0,178,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,178,255,0.03) 1px, transparent 1px),
+    radial-gradient(circle at 50% 0%, rgba(255,0,203,0.08) 0%, transparent 60%);
+  background-size:28px 28px, 28px 28px, 100% 100%;
+  color:var(--text);
+  font:13px/1.5 var(--sans);
+  position:relative;
+}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:.3px}
+.pos{color:var(--neon-cyan)!important;text-shadow:0 0 8px rgba(0,178,255,.5)}
+.neg{color:var(--neon-pink)!important;text-shadow:0 0 8px rgba(255,0,203,.5)}
+.big{font:700 24px var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.5px;color:#fff;text-shadow:0 0 15px rgba(0,178,255,.45)}
+.pos{color:var(--up)} .neg{color:var(--down)} .mut{color:var(--muted)} .c-ok{color:var(--ok)} .c-warn{color:var(--warn)} .c-err{color:var(--err)}
+button{background:var(--panel2);color:var(--text);border:1px solid var(--line2);border-radius:6px;padding:6px 12px;cursor:pointer;font:600 12.5px var(--sans);transition:all .18s ease}
+button:hover{border-color:var(--neon-cyan);box-shadow:0 0 10px rgba(0, 178, 255, 0.25)} button:disabled{opacity:.45;cursor:default}
+button.on{background:linear-gradient(135deg, rgba(255, 0, 203, 0.22), rgba(0, 178, 255, 0.26));border-color:var(--neon-cyan);color:#fff;box-shadow:0 0 10px rgba(0, 178, 255, 0.35)}
+button.go{background:rgba(0, 178, 255, 0.18);border-color:var(--neon-cyan);color:#c7f0ff;box-shadow:0 0 10px rgba(0, 178, 255, 0.25)}
+button.danger{background:rgba(255, 0, 203, 0.18);border-color:var(--neon-pink);color:#ffd4f7;box-shadow:0 0 10px rgba(255, 0, 203, 0.25)}
+
+/* ============ BAR STATUS (selalu terlihat) ============ */
+.top{position:sticky;top:0;z-index:20;background:rgba(14,19,34,.94);backdrop-filter:blur(10px);border-bottom:2px solid;border-image:linear-gradient(90deg,#FF00CB 0%,#00B2FF 50%,#FF00CB 100%) 1;box-shadow:0 4px 20px rgba(0,178,255,.15)}
+.topbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 16px}
+.brand{font-weight:800;font-size:16px;letter-spacing:.5px;margin-right:8px;background:linear-gradient(135deg,#FF00CB 0%,#00B2FF 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 10px rgba(0,178,255,.45))}
+.mode{padding:2px 9px;border-radius:10px;font:700 11.5px var(--sans);letter-spacing:.5px}
+.mode.paper{background:rgba(255,0,203,.18);color:var(--neon-pink);border:1px solid rgba(255,0,203,.45);box-shadow:0 0 10px rgba(255,0,203,.25)}
+.mode.demo{background:rgba(0,178,255,.18);color:var(--neon-cyan);border:1px solid rgba(0,178,255,.45);box-shadow:0 0 10px rgba(0,178,255,.25)}
+.mode.live{background:rgba(248,81,73,.2);color:#ff9a8f;border:1px solid rgba(248,81,73,.5);box-shadow:0 0 10px rgba(248,81,73,.3)}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 8px;border-radius:7px;border:1px solid var(--line2);background:var(--panel2);min-width:0}
+.pill .d{width:9px;height:9px;border-radius:50%;flex:none;background:var(--off)}
+.pill b{font-size:12px;white-space:nowrap} .pill small{display:block;color:var(--muted);font-size:10.5px;white-space:nowrap;line-height:1.2}
+.pill.ok .d{background:var(--ok);box-shadow:0 0 0 3px rgba(63,185,80,.18)}
+.pill.warn{border-color:#6b5213} .pill.warn .d{background:var(--warn)}
+.pill.err{border-color:#8b2a2a;background:#2a1414} .pill.err .d{background:var(--err);animation:blink 1.2s infinite}
+.pill.off .d{background:var(--off)}
+@keyframes blink{50%{opacity:.35}}
+.spacer{flex:1}
+.ctrl{display:flex;gap:6px;flex-wrap:wrap}
+#alerts{display:flex;flex-direction:column;gap:4px;padding:0 16px}
+#alerts:not(:empty){padding-bottom:8px}
+.alert{padding:7px 12px;border-radius:6px;font-weight:600;font-size:12.5px;border:1px solid}
+.al-critical{background:#4a1111;border-color:#b33;color:#ffd6d6}
+.al-error{background:#3d1a12;border-color:#8b3a20;color:#ffd0bf}
+.al-warn{background:#3b300d;border-color:#8a6d16;color:#ffe9a8}
+.al-info{background:#15263a;border-color:#2b4d73;color:#cfe3ff}
+body.stale .top{border-bottom:3px solid var(--err)}
+body.stale .card:not(.keep){filter:saturate(.3);border-style:dashed}   /* data basi: warna pudar, teks TETAP terbaca */
+
+/* ============ LAYOUT ============ */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) var(--side-w,360px);gap:var(--gap);padding:var(--gap) 16px;align-items:start}
+.main{display:flex;flex-direction:column;gap:var(--gap);min-width:0}
+.side{display:flex;flex-direction:column;gap:var(--gap);position:sticky;top:var(--side-top,64px);max-height:calc(100vh - var(--side-top,64px) - 12px);overflow:auto;min-width:0}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--gap);align-items:start}
+@media (max-width:1180px){ .layout{grid-template-columns:minmax(0,1fr)} .side{position:static;max-height:none} }
+@media (max-width:760px){ .row2{grid-template-columns:1fr} .layout{padding:8px} .topbar{padding:8px} }
+.card{
+  background:linear-gradient(180deg, #0e1324 0%, #090c17 100%);
+  border:1px solid #1a223c;
+  border-radius:6px;
+  padding:12px 14px;
+  min-width:0;
+  box-shadow:0 4px 20px rgba(0,0,0,.5), inset 0 0 15px rgba(0,178,255,.02);
+  position:relative;
+  transition:border-color .2s ease, box-shadow .2s ease;
+}
+.card:hover{
+  border-color:rgba(0,178,255,.35);
+  box-shadow:0 4px 24px rgba(0,0,0,.6), 0 0 15px rgba(0,178,255,.1);
+}
+.card>h3{
+  margin:0 0 10px;
+  font:700 11.5px var(--mono);
+  letter-spacing:.8px;
+  text-transform:uppercase;
+  color:#F1F5F9;
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:8px;
+  border-bottom:1px solid rgba(0,178,255,.15);
+  padding-bottom:6px;
+}
+.card>h3::before{
+  content:"// ";
+  color:var(--neon-pink);
+  font-weight:800;
+}
+.card>h3 small{font:400 11px var(--sans);letter-spacing:0;text-transform:none;color:var(--muted)}
+.sub{font:600 10.5px var(--sans);letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:10px 0 4px}
+
+/* ============ CHART ============ */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-bottom:8px}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:4px;overflow:hidden;box-shadow:0 0 10px rgba(0,0,0,.3)}
+.seg button{border:0;border-radius:0;padding:5px 10px;font-weight:600}
+.seg button.off{color:var(--text-tertiary);cursor:not-allowed}
+.seg button.off:hover{border-color:transparent}
+.tfnote{font-size:11.5px;color:var(--muted)} .tfnote b{color:var(--text)}
+.layers{position:relative;margin-left:auto;display:flex;gap:8px;align-items:center}
+.layer-pop{display:none;position:absolute;right:0;top:34px;z-index:15;background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:10px 12px;width:min(520px,90vw);box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.layer-pop.open{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px}
+.layer-pop .grp{font:600 10.5px var(--sans);letter-spacing:.6px;text-transform:uppercase;color:var(--muted);grid-column:1/-1;margin-top:6px}
+.layer-pop label{display:flex;align-items:center;gap:7px;font-size:12.5px;cursor:pointer;padding:2px 0}
+.layer-pop i{width:10px;height:10px;border-radius:2px;flex:none}
+.chart-wrap{position:relative}
+#chart{height:560px}
+.overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:8px;text-align:center;padding:20px}
+.overlay.show{display:flex}
+.loading{color:var(--muted)}
+.spin{width:26px;height:26px;border-radius:50%;border:3px solid var(--line2);border-top-color:var(--neon-pink);border-right-color:var(--neon-cyan);animation:spin .9s linear infinite;box-shadow:0 0 12px rgba(0,178,255,.35)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.stale-ov{background:rgba(13,17,23,.72);border:2px solid var(--err);border-radius:6px;color:#ffd6d6;font-weight:700;font-size:15px}
+.stale-ov small{font-weight:400;font-size:12.5px;color:#f3b5b0;max-width:520px}
+#chartnote{margin-top:6px;font-size:11.5px;color:var(--muted)}
+
+/* ============ TABEL & KV ============ */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{font:600 10.5px var(--sans);letter-spacing:.5px;text-transform:uppercase;color:var(--muted);text-align:right;padding:5px 8px;border-bottom:1px solid var(--line2);white-space:nowrap}
+td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-family:var(--mono);font-variant-numeric:tabular-nums}
+th.l,td.l{text-align:left} td.t{font-family:var(--sans)}
+tbody tr:hover{background:rgba(0,178,255,.08);box-shadow:inset 2px 0 0 var(--neon-cyan)} tr.click{cursor:pointer}
+tfoot td{border-bottom:0;color:var(--muted);font-weight:600}
+.tbl{overflow:auto;max-height:300px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;align-items:baseline}
+.kv>span{color:var(--muted);font-size:12px} .kv>b{text-align:right;font:600 12.5px var(--mono);font-variant-numeric:tabular-nums}
+.big{font:700 24px var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.meter{height:6px;background:#13182b;border:1px solid rgba(0,178,255,.15);border-radius:3px;overflow:hidden;margin-top:3px}
+.meter i{display:block;height:100%;border-radius:2px;background:linear-gradient(90deg,var(--neon-pink),var(--neon-cyan));box-shadow:0 0 10px rgba(0,178,255,.5)}
+.tag{padding:1px 7px;border-radius:8px;font:600 11px var(--sans);background:#243040;color:var(--text)}
+.tag.me{background:rgba(16,185,129,.18);color:#6ee7b7;border:1px solid rgba(16,185,129,.35)} .tag.buy{background:rgba(0,178,255,.16);color:var(--neon-cyan);border:1px solid rgba(0,178,255,.35)} .tag.sell{background:rgba(255,0,203,.16);color:var(--neon-pink);border:1px solid rgba(255,0,203,.35)}
+.sym{border:1px solid var(--line);border-radius:7px;padding:8px 10px;margin-bottom:8px}
+.sym .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
+.sym .st{font-size:12px;margin-top:3px}
+.blk{font-size:11px;color:var(--warn)} .cand{font-size:11px;color:var(--muted)}
+.state-tag{font:700 10.5px var(--sans);padding:1px 7px;border-radius:8px}
+.state-tag.ok{background:#12351f;color:var(--ok)} .state-tag.warn{background:#3b300d;color:var(--warn)} .state-tag.err{background:#3d1515;color:var(--err)} .state-tag.off{background:#262c34;color:var(--text-secondary)}
+.mono-log{font:11px/1.55 var(--mono);white-space:pre-wrap;color:var(--muted);max-height:220px;overflow:auto}
+#eqspark{height:64px;margin:6px 0 2px}
+#learnchart{height:330px}
+.learn-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--gap)}
+@media (max-width:1000px){.learn-grid{grid-template-columns:1fr}}
+td.trig{max-width:320px;overflow:hidden;text-overflow:ellipsis}
+#legend>div{display:flex;gap:8px;align-items:flex-start;margin:4px 0;font-size:12px}
+.legend i{flex:none;width:12px;height:12px;border-radius:3px;margin-top:3px}
+.detail ul{margin:3px 0 0 16px;padding:0} .detail li{margin:1px 0}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin:4px 0} .bar i{display:block;height:100%}
+
+/* ============ LOADING SKELETON ============ */
+.sk{height:12px;border-radius:4px;margin:7px 0;background:linear-gradient(90deg,#1b222c 25%,#252e3a 50%,#1b222c 75%);background-size:200% 100%;animation:sh 1.3s infinite}
+.sk.w60{width:60%} .sk.w40{width:40%} .sk.h24{height:24px}
+@keyframes sh{to{background-position:-200% 0}}
+
+/* ============ SWITCH (toggle) ============ */
+.sw{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-size:12.5px}
+.sw input{position:absolute;opacity:0;width:0;height:0}
+.sw .knob{position:relative;flex:none;width:30px;height:17px;border-radius:9px;background:#252d47;transition:background .18s}
+.sw .knob::after{content:"";position:absolute;left:2px;top:2px;width:13px;height:13px;border-radius:50%;background:#cbd5e1;transition:transform .18s}
+.sw input:checked+.knob{background:linear-gradient(135deg,var(--neon-pink),var(--neon-cyan));box-shadow:0 0 10px rgba(0,178,255,.45)} .sw input:checked+.knob::after{transform:translateX(13px);background:#fff}
+.sw input:focus-visible+.knob{outline:2px solid var(--neon-cyan);outline-offset:2px}
+.big-sw{padding:4px 12px 4px 6px;border:1px solid var(--line2);border-radius:18px;background:var(--panel2)}
+.big-sw .knob{width:38px;height:21px;border-radius:11px} .big-sw .knob::after{width:17px;height:17px}
+.big-sw input:checked+.knob{background:var(--ok)} .big-sw input:checked+.knob::after{transform:translateX(17px)}
+.big-sw.on{border-color:#1f7a55;background:#10281d} .big-sw b{font-size:12.5px;white-space:nowrap}
+.big-sw.busy{opacity:.6;pointer-events:none}
+.news-sw{padding:4px 12px 4px 6px;border:1px solid rgba(255,0,203,.35);border-radius:18px;background:rgba(255,0,203,.08);transition:all .2s ease}
+.news-sw .knob{width:38px;height:21px;border-radius:11px} .news-sw .knob::after{width:17px;height:17px}
+.news-sw input:checked+.knob{background:linear-gradient(135deg,var(--neon-pink),#9d00ff);box-shadow:0 0 12px rgba(255,0,203,.65)}
+.news-sw input:checked+.knob::after{transform:translateX(17px)}
+.news-sw.on{border-color:var(--neon-pink);background:rgba(255,0,203,.18);box-shadow:0 0 15px rgba(255,0,203,.35)}
+.news-sw.on #newsSwTxt{color:#fff;text-shadow:0 0 8px rgba(255,0,203,.9)}
+.news-sw b{font-size:12.5px;white-space:nowrap;color:var(--neon-pink)}
+
+.nte-card{border:1px solid rgba(0,178,255,.3);border-radius:8px;background:linear-gradient(180deg,rgba(10,20,35,.85),rgba(5,10,20,.95));padding:10px 12px;margin-bottom:10px;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.nte-card.nte-active{border-color:rgba(255,0,203,.5);box-shadow:0 0 16px rgba(255,0,203,.2)}
+.nte-card.nte-off{border-color:var(--line2);opacity:.75}
+.nte-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid var(--line2);padding-bottom:6px}
+.nte-badge{font:700 11px var(--mono);padding:2px 8px;border-radius:12px;background:rgba(255,0,203,.2);color:var(--neon-pink);border:1px solid rgba(255,0,203,.4);letter-spacing:.5px}
+.nte-card.nte-off .nte-badge{background:rgba(255,255,255,.05);color:var(--muted);border-color:var(--line)}
+.nte-strat{font:600 11px var(--mono);color:var(--neon-cyan)}
+.nte-body{font-size:11.5px;display:flex;flex-direction:column;gap:5px}
+.nte-status b{color:#fff}
+.nte-next{color:var(--gold)}
+.nte-info{font-size:11px;color:var(--muted);font-style:italic}
+.nte-orders{margin-top:6px;border-top:1px dashed var(--line2);padding-top:6px}
+.nte-order-title{font:600 11px var(--mono);color:var(--neon-cyan);margin-bottom:4px}
+.nte-order-item{display:flex;justify-content:space-between;padding:3px 6px;border-radius:4px;background:rgba(0,0,0,.3);margin-bottom:3px;font-family:var(--mono);font-size:11px}
+.nte-order-item.nte-buy{border-left:3px solid var(--up);color:#b3ffcc}
+.nte-order-item.nte-sell{border-left:3px solid var(--down);color:#ffb3ba}
+
+/* ============ PEMILIH BOT & MENU ============ */
+.botsw button{display:inline-flex;align-items:center;gap:6px;padding:4px 10px}
+.botsw .d{width:7px;height:7px;border-radius:50%;background:var(--off)}
+.botsw .d.ok{background:var(--ok)} .botsw .d.err{background:var(--err)}
+.botsw .n{font:600 10.5px var(--mono);background:#2a3340;border-radius:7px;padding:0 5px;color:var(--muted)}
+.pop-wrap{position:relative}
+.pop{display:none;position:absolute;right:0;top:36px;z-index:25;background:var(--panel2);border:1px solid var(--line2);border-radius:8px;
+     padding:10px 12px;width:230px;box-shadow:0 10px 30px rgba(0,0,0,.45);flex-direction:column;gap:7px}
+.pop.open{display:flex}
+.pop .grp,.layer-pop .grp{font:600 10.5px var(--sans);letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.seg.mini button{padding:3px 12px;font-size:12px} .mini-btn{padding:4px 10px;font-size:12px}
+.presets button{padding:5px 10px}
+.layer-pop label.sw{padding:3px 0}
+
+/* ============ PANEL BISA DILIPAT ============ */
+.card>h3.fold{cursor:pointer;user-select:none;justify-content:flex-start}
+.card>h3.fold::before{content:"▾";display:inline-block;margin-right:6px;color:var(--faint);transition:transform .15s}
+.card>h3.fold small{margin-left:auto}
+.card.collapsed>h3{margin-bottom:0} .card.collapsed>h3.fold::before{transform:rotate(-90deg)}
+.card.collapsed>*:not(h3){display:none!important}
+
+/* ============ PANEL DATA BERTAB ============ */
+.datacard{padding-top:0}
+.tabbar{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line2);margin:0 -14px 10px;padding:0 10px;scrollbar-width:thin}
+.tabbar button{background:none;border:0;border-bottom:2px solid transparent;border-radius:0;padding:10px 10px 8px;color:var(--muted);white-space:nowrap;display:inline-flex;gap:6px;align-items:center}
+.tabbar button:hover{color:var(--text)} .tabbar button.on{color:#fff;border-bottom-color:var(--neon-cyan);text-shadow:0 0 10px rgba(0,178,255,.6)}
+.tabbar .n{font:600 10.5px var(--mono);background:#1a233a;border-radius:8px;padding:0 6px;color:var(--muted)}
+.tabbar .n:empty{display:none} .tabbar button.on .n{background:rgba(255,0,203,.22);color:var(--neon-pink);border:1px solid rgba(255,0,203,.4)}
+.pane{display:none} .pane.on{display:block}
+.symfilter{margin-left:auto;align-self:center;background:var(--panel2);color:var(--text);border:1px solid var(--line2);border-radius:6px;padding:4px 8px;font:12px var(--sans)}
+.symfilter.on{border-color:var(--blue);color:#fff}
+.sym.dim{border-style:dashed;background:#12171e} .sym .hd .sw b{font-size:13px}   /* OFF: tanpa opacity supaya kontras tetap AA */
+select option{background:var(--panel2);color:var(--text-primary)}
+/* profil & skill */
+.profsel{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.profsel .seg button{padding:4px 10px;font-size:11.5px;letter-spacing:.3px}
+.profsel .seg button.on[data-p="AGGRESSIVE"]{background:#4a2a0c;border-color:var(--orange);color:#ffd9b0}
+.profsel .seg button.on[data-p="CONSERVATIVE"]{background:#0f2f4a;color:#cfe8ff}
+.profsel .seg button.pend{background:#3b300d;color:#ffe9a8}
+.profstat{font-size:11.5px;color:var(--text-secondary);max-width:520px}
+.profstat.wait{color:#ffe9a8} .profstat.err{color:#ffb4ab;font-weight:600} .profstat.ok{color:#9be9a8} .profstat.aggr{color:#ffd9b0}
+.ovsel{display:flex;align-items:center;gap:8px;margin-top:6px} .ovsel .seg.mini button{padding:2px 8px;font-size:11px}
+.ovsel .seg button.on[data-m="RUN"]{background:#3b300d;color:#ffe9a8} .ovsel .seg button.on[data-m="BLOCK"]{background:#3d1515;color:#ffd6d6}
+.histbar{display:flex;gap:8px;align-items:center;margin-top:6px;font-size:11.5px}
+.nrow{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--line);font-size:12px} .nic{font:700 13px var(--mono);width:18px;text-align:center}
+.nic.t-High{color:var(--err)} .nic.t-Medium{color:var(--gold)} .nic.t-Low{color:var(--text-secondary)}
+.lvset{display:block;font-size:11px;color:var(--muted);margin:0 0 6px} .lvdisc{font-size:10.5px;color:var(--muted);margin-top:6px}
+.lvcard{container-type:inline-size;position:relative;border:1px solid var(--border,#2a3441);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.02);color:#fff}
+.lvcard.sel{outline:1px solid var(--blue)} .lvhd{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;padding:6px 8px;cursor:pointer}
+.lvhd b.sy{font-size:13px} .lvhd .px{font-family:var(--mono,monospace);font-weight:700} .lvhd .meta{margin-left:auto;font-size:10.5px;color:var(--muted)}
+.lvst{font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:9px;background:#2a3441} .lvst.AKTIF{background:#1f6f5f} .lvst.MENUNGGU{background:#8a6d1c} .lvst.TAHAN{background:#7a2f2f} .lvst.PANTAUAN{background:#2c4a78} .lvst.NA,.lvst.OFF{background:#333;color:#999}
+.lvcard.collapsed .lvbody{display:none} .lvna{padding:6px 8px;font-size:11.5px;color:var(--muted)}
+.lvcols{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 6px 6px} .lvtabs{display:none;padding:0 6px 4px;gap:4px} .lvtabs button{flex:1;font-size:11px;padding:3px}
+.lvtabs button.on{background:#26364a;font-weight:700}
+@container (max-width:430px){ .lvcols{grid-template-columns:1fr} .lvtabs{display:flex} .lvsc:not(.on){display:none} }
+.lvsc{border:1px solid #2a3441;border-radius:6px;padding:5px 7px;font-size:11px;line-height:1.55} .lvsc.alt{opacity:.72}
+.lvsc.BUY{border-top:3px solid var(--up)} .lvsc.SELL{border-top:3px solid var(--down)} .lvsc .dh{font-weight:700} .lvsc.BUY .dh{color:var(--up)} .lvsc.SELL .dh{color:var(--down)}
+.lvsc .n{font-family:var(--mono,monospace)} .lvsc .k{color:var(--muted)} .lvsc .src{color:var(--muted);font-size:10px} .lvsc .why{color:var(--warn);font-size:10.5px;margin:3px 0}
+.lvsc .prov{font-size:9.5px;padding:0 4px;border-radius:3px;background:#3a3a1e;color:#e3b341} .lvsc .conf{font-size:9.5px;padding:0 4px;border-radius:3px;background:#1e3a34;color:#7fd8c8}
+.lvsc button.cp{font-size:10.5px;margin-top:4px} @keyframes lvflash{0%{background:#3b5b2f}100%{background:transparent}} .lvsc.flash{animation:lvflash 2s ease-out}
+.lvlive{margin:0 6px 6px;padding:4px 6px;border:1px dashed #3a4a5f;border-radius:6px;font-size:11px} .lvlive .bad{color:#fff;background:#b3261e;padding:0 5px;border-radius:3px;font-weight:700}
+.lvstale{position:absolute;inset:0;background:rgba(10,14,20,.55);display:flex;align-items:center;justify-content:center;font-weight:800;letter-spacing:2px;color:#e3b341;pointer-events:none;border-radius:8px}
+.lvcard.stale .lvbody{opacity:.35} .lvcard.stale button.cp{display:none}
+.whynot{font-size:11.5px;margin-top:4px;padding:4px 6px;border-left:2px solid var(--warn);background:#1b1f14}
+.skill{padding:5px 0;border-bottom:1px solid var(--line)} .skill:last-child{border-bottom:0}
+.skill.off .sw b{color:var(--text-secondary);text-decoration:line-through}
+.skill .dep{color:#ffe9a8}
+.psel{background:var(--panel2);color:var(--text-primary);border:1px solid var(--line2);border-radius:5px;font:11.5px var(--sans);padding:2px 4px}
+.symkv{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:1px 10px;font-size:11.5px;margin-top:5px}
+.symkv span{color:var(--muted)} .symkv b{text-align:right;font-weight:600}
+.pane .tbl{max-height:340px}
+.hint{font-size:11.5px;color:var(--muted);margin-bottom:6px}
+.mt5grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:16px}
+@media (max-width:900px){ .mt5grid{grid-template-columns:minmax(0,1fr)} }
+.side>[hidden],.tabbar>[hidden]{display:none!important}
+body.nospark #eqspark{display:none}
+
+/* ============ LACI PENGATURAN ============ */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;display:none} .scrim.open{display:block}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(340px,92vw);z-index:41;background:var(--panel);border-left:1px solid var(--line2);
+  transform:translateX(100%);transition:transform .2s ease;display:flex;flex-direction:column;box-shadow:-12px 0 30px rgba(0,0,0,.4)}
+.drawer.open{transform:none}
+.drawer-hd{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.drawer-hd b{font-size:14px} .drawer-hd button{padding:3px 9px}
+.drawer-bd{overflow:auto;padding:6px 16px 16px;display:flex;flex-direction:column;gap:9px}
+.drawer .grp{font:600 10.5px var(--sans);letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+.drawer .grp small{text-transform:none;letter-spacing:0;font-weight:400;margin-left:4px}
+.optrow{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px}
+.order{display:flex;flex-direction:column;gap:3px}
+.order .it{display:flex;align-items:center;gap:6px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)}
+.order .it.off{border-style:dashed;background:#12171e} .order .it .sw{flex:1}
+.order .it button{padding:1px 7px;font-size:12px;line-height:1.4}
+.drawer-ft{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+
+/* ============ MODE RINGKAS ============ */
+body.compact{font-size:12px;--gap:8px} body.compact .card{padding:8px 10px} body.compact .card>h3{margin-bottom:6px}
+body.compact td{padding:3px 6px} body.compact .pill small{display:none}
+body.compact .sym{padding:5px 8px;margin-bottom:5px} body.compact .big{font-size:20px}
+@media (max-width:760px){ .presets{display:none} .tfnote{display:none} }
+</style>
+</head>
+<body>
+<div class="top" id="top">
+  <div class="topbar">
+    <span class="brand">⚡ GOLD SCALPER AI</span>
+    <span class="seg botsw" id="botsw" title="Pindah dashboard bot (titik = status bot, angka = posisi terbuka)"></span>
+    <span id="mode" class="mode" style="display:none"></span>
+    <div class="profsel" title="Profil risiko GLOBAL — perubahan dikirim ke bot dan baru AKTIF setelah bot mengonfirmasi (ACK)">
+      <span class="seg" id="profbtns"><button data-p="CONSERVATIVE">CONSERVATIVE</button><button data-p="NORMAL">NORMAL</button><button data-p="AGGRESSIVE">AGGRESSIVE</button></span>
+      <small id="profstat" class="profstat">memuat…</small>
+    </div>
+    <div class="pills">
+      <div class="pill off" id="p-mt5"><span class="d"></span><div><b>MT5</b><small>memeriksa…</small></div></div>
+      <div class="pill off" id="p-bot"><span class="d"></span><div><b>Bot</b><small>memeriksa…</small></div></div>
+      <div class="pill off" id="p-bridge"><span class="d"></span><div><b>Bridge</b><small>memeriksa…</small></div></div>
+      <div class="pill off" id="p-burst"><span class="d"></span><div><b>Burst</b><small>memeriksa…</small></div></div>
+      <div class="pill off" id="p-risk"><span class="d"></span><div><b>Rem risiko</b><small>memeriksa…</small></div></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="ctrl">
+      <label class="sw big-sw" title="ON = burst menyala & sinyal dievaluasi segera (rem risiko tetap berlaku). OFF = tidak ada entry baru; posisi terbuka tetap dikelola SL/trailing.">
+        <input type="checkbox" id="burstSw"><span class="knob"></span><b id="burstSwTxt">Burst</b></label>
+      <label class="sw news-sw" title="ON = News Trading Engine aktif (pending order Buy/Sell Limit & Stop jelang berita High-Impact). OFF = Blackout pasif tanpa pending order.">
+        <input type="checkbox" id="newsSw"><span class="knob"></span><b id="newsSwTxt">⚡ News Engine</b></label>
+      <button id="viewBtn" title="Atur tampilan, panel & tab dashboard">⚙ Atur</button>
+      <button class="danger" id="stopBtn" title="Tutup SEMUA posisi bot lalu bot berhenti">⏻ STOP</button>
+    </div>
+  </div>
+  <div id="alerts"></div>
+</div>
+
+<div class="layout">
+  <!-- =================== KOLOM UTAMA =================== -->
+  <div class="main">
+    <section class="card keep">
+      <div class="toolbar">
+        <span class="seg" id="tabs"></span>
+        <span class="seg" id="tfs"></span>
+        <span class="tfnote" id="tfnote"></span>
+        <div class="layers">
+          <span class="seg presets" id="presets" title="Preset tampilan chart — satu klik. Bisa dibaca dalam 5 detik; detail ada di Lanjutan.">
+            <button data-p="bersih">Bersih</button><button data-p="trading">Trading</button><button data-p="belajar">Belajar</button>
+          </span>
+          <button id="layerBtn">Lanjutan ▾</button>
+          <div class="layer-pop" id="layerPop">
+            <div class="grp">Candlestick</div>
+            <label class="sw"><input type="checkbox" data-l="candle"><span class="knob"></span><i style="background:var(--gold)"></i>Pola candlestick</label>
+            <label class="sw"><input type="checkbox" data-l="doji"><span class="knob"></span><i style="background:var(--gray)"></i>+ Doji</label>
+            <div class="grp">Struktur</div>
+            <label class="sw"><input type="checkbox" data-l="chart"><span class="knob"></span><i style="background:var(--pink)"></i>Chart pattern</label>
+            <label class="sw"><input type="checkbox" data-l="sr" checked><span class="knob"></span><i style="background:var(--gray)"></i>Support / resistance (TF chart)</label>
+            <label class="sw"><input type="checkbox" data-l="trend"><span class="knob"></span><i style="background:var(--cyan)"></i>Trendline & swing</label>
+            <label class="sw"><input type="checkbox" data-l="ema"><span class="knob"></span><i style="background:var(--neon-cyan)"></i>EMA 5 / 8 / 21</label>
+            <div class="grp">Smart Money Concepts</div>
+            <label class="sw"><input type="checkbox" data-l="ob"><span class="knob"></span><i style="background:var(--up)"></i>Order Block</label>
+            <label class="sw"><input type="checkbox" data-l="fvg"><span class="knob"></span><i style="background:var(--teal)"></i>Fair Value Gap</label>
+            <label class="sw"><input type="checkbox" data-l="bos"><span class="knob"></span><i style="background:var(--blue)"></i>BOS / CHoCH</label>
+            <label class="sw"><input type="checkbox" data-l="liq"><span class="knob"></span><i style="background:var(--gold)"></i>Likuiditas</label>
+            <div class="grp">Bot</div>
+            <label class="sw"><input type="checkbox" data-l="trades" checked><span class="knob"></span><i style="background:var(--down)"></i>Posisi (agregat + pita SL/TP)</label>
+            <label class="sw"><input type="checkbox" data-l="entry"><span class="knob"></span><i style="background:#fff"></i>Alasan entry (histori)</label>
+            <label class="sw"><input type="checkbox" data-l="old"><span class="knob"></span><i style="background:#555"></i>Objek batal / terisi</label>
+            <div class="grp">Rencana posisi, level &amp; berita</div>
+            <label class="sw"><input type="checkbox" data-l="entryline" checked><span class="knob"></span><i style="background:var(--up)"></i>Titik entry BUY/SELL (garis)</label>
+            <label class="sw"><input type="checkbox" data-l="plan" checked><span class="knob"></span><i style="background:var(--up)"></i>Rencana lengkap (SL/TP/zona) — 1 terbaik/simbol</label>
+            <label class="sw"><input type="checkbox" data-l="rejected"><span class="knob"></span><i style="background:#8b96a3"></i>Tampilkan plan ditolak juga</label>
+            <label class="sw"><input type="checkbox" data-l="srmtf" checked><span class="knob"></span><i style="background:var(--cyan)"></i>S/R multi-TF (H1-W1)</label>
+            <label class="sw"><input type="checkbox" data-l="refs" checked><span class="knob"></span><i style="background:#9aa4b1"></i>PDH/PDL, sesi, bulat</label>
+            <label class="sw"><input type="checkbox" data-l="news" checked><span class="knob"></span><i style="background:var(--gold)"></i>Penanda berita</label>
+          </div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <div id="chart"></div>
+        <div class="overlay loading show" id="chartLoading"><div class="spin"></div><div>Memuat chart…</div></div>
+        <div class="overlay stale-ov" id="staleOv"><div>⛔ DATA BASI — PASAR TIDAK DIPANTAU</div><small id="staleTxt"></small></div>
+      </div>
+      <div id="chartnote"></div>
+      <div class="histbar"><button id="histBtn" title="Chart histori 2 tahun dari cache lokal (resampling sesuai zoom, lazy-load)">Histori 2 thn</button>
+        <button id="moreBtn" hidden>◀ Muat lebih ke belakang</button><span id="datainfo" class="mut"></span></div>
+    </section>
+
+    <!-- satu panel bertab menggantikan 6 kartu: semua data tetap ada, layar tidak panjang -->
+    <section class="card datacard" id="datacard">
+      <nav class="tabbar" id="tabbar">
+        <button data-tab="pos">Posisi <span class="n" id="poscount">0</span></button>
+        <button data-tab="perf">Performa per simbol</button>
+        <button data-tab="eval">Evaluasi profil/skill</button>
+        <button data-tab="sig">Log sinyal <span class="n" id="sigcount"></span></button>
+        <button data-tab="burst">Tiket burst</button>
+        <button data-tab="mt5">Akun MT5 <span class="n" id="mt5count"></span></button>
+        <button data-tab="learn">Learning</button>
+        <button data-tab="log">Log & koneksi</button>
+        <button data-tab="legend">Legenda</button>
+        <select id="symfilter" class="symfilter" title="Filter tabel Posisi, Log sinyal & Tiket burst per simbol"><option value="">Semua simbol</option></select>
+      </nav>
+      <div class="pane" data-pane="pos"><div class="tbl" id="positions"><div class="sk"></div><div class="sk w60"></div></div></div>
+      <div class="pane" data-pane="eval"><div class="hint">Metrik per profil &amp; per kombinasi skill saat tiket DIBUKA (logs\trades_meta.csv, mulai 28 Sep). Max DD = penurunan terbesar P/L kumulatif.</div>
+        <div class="sub" style="margin-top:0">Per profil</div><div class="tbl" id="evalprof"></div>
+        <div class="sub">Per kombinasi skill</div><div class="tbl" id="evalskill"></div>
+        <div class="sub">Sinyal ditolak terakhir</div><div class="tbl" id="rejects"></div></div>
+      <div class="pane" data-pane="perf"><div class="hint">Win rate & P/L per simbol dan gabungan TOTAL (dari jurnal trade tertutup; hari = UTC). Klik baris untuk memfilter tab lain ke simbol itu.</div>
+        <div class="tbl" id="perf"><div class="sk"></div><div class="sk w60"></div></div></div>
+      <div class="pane" data-pane="sig"><div class="hint">Klik baris untuk alasan entry lengkap di panel Detail.</div>
+        <div class="tbl" id="siglog"><div class="sk"></div><div class="sk w60"></div></div></div>
+      <div class="pane" data-pane="burst"><div class="hint">Waktu UTC dengan milidetik · latensi = jeda dari candle sinyal tertutup.</div>
+        <div class="tbl" id="burstlog"><div class="sk"></div><div class="sk w60"></div></div></div>
+      <div class="pane" data-pane="mt5">
+        <div class="hint" id="mt5acc">data langsung dari terminal</div>
+        <div class="mt5grid">
+          <div><div class="kv" id="mt5kv"><div class="sk"></div><div class="sk"></div></div>
+            <div id="mt5sync" style="margin-top:8px;font-size:12px"></div>
+            <div class="sub">Tertutup hari ini (UTC) per pemilik</div><div class="tbl" id="mt5today"></div></div>
+          <div><div class="sub" style="margin-top:0">Semua posisi di MT5 (sama dengan tab Trade)</div><div class="tbl" id="mt5pos"></div></div>
+        </div>
+      </div>
+      <div class="pane" data-pane="learn"><div class="hint" id="learnnote"></div>
+        <div class="learn-grid"><div id="learnchart"></div><div class="tbl" style="max-height:330px" id="learntable"></div></div></div>
+      <div class="pane" data-pane="log"><div class="mt5grid">
+        <div><div class="sub" style="margin-top:0">Putus / pulih (pemantau kesehatan)</div><div class="mono-log" id="healthlog"></div>
+          <div class="sub">Audit tombol kontrol</div><div class="mono-log" id="audit" style="max-height:120px"></div></div>
+        <div><div class="sub" style="margin-top:0">Log bot terakhir</div><div class="mono-log" id="log" style="max-height:300px"></div></div></div></div>
+      <div class="pane legend" data-pane="legend"><div id="legend"></div></div>
+      <div class="pane" data-pane="none"><div class="mut">Semua tab disembunyikan — aktifkan lagi lewat ⚙ Atur dashboard.</div></div>
+    </section>
+  </div>
+
+  <!-- =================== SIDEBAR (tetap terlihat) =================== -->
+  <aside class="side" id="side">
+    <section class="card" data-panel="sum"><h3>Ringkasan <small id="eqsrc"></small></h3>
+      <div class="big" id="eq"><div class="sk h24 w60"></div></div>
+      <div id="eqspark"></div>
+      <div class="kv">
+        <span>P/L hari ini</span><b id="dpnl">–</b>
+        <span>Rem rugi harian</span><b><span id="dlim">–</span><div class="meter"><i id="dmeter"></i></div></b>
+        <span>Drawdown dari puncak</span><b><span id="dd">–</span><div class="meter"><i id="ddmeter"></i></div></b>
+        <span>Win rate hari ini</span><b id="wrd">–</b>
+        <span>Win rate total · PF</span><b id="wrt">–</b>
+        <span>Risiko terbuka / batas</span><b id="orisk">–</b>
+      </div>
+    </section>
+
+    <section class="card" data-panel="lv"><h3>Saran Level Trading <small id="lvupd"></small></h3>
+      <label class="lvset"><input type="checkbox" id="lv247"> Tampilkan XAUUSD247</label>
+      <div id="lvbox"><div class="sk"></div><div class="sk w60"></div></div>
+      <div class="lvdisc">Level dihitung dari struktur harga dan ATR. Bukan jaminan arah harga.</div>
+    </section>
+
+    <section class="card" data-panel="news"><h3>Berita &amp; News Trading Engine <small id="newssym"></small></h3>
+      <div id="ntebox"></div>
+      <div id="newsbox"><div class="sk"></div><div class="sk w60"></div></div>
+    </section>
+
+    <section class="card" data-panel="skills"><h3>Profil &amp; skill <small id="sigsum"></small></h3>
+      <div class="sub" style="margin-top:0">Sinyal hari ini — terdeteksi vs dieksekusi</div><div id="sigstats"><div class="sk"></div></div>
+      <div class="sub">Skill (ON/OFF, dengan konfirmasi bot)</div><div id="skills"><div class="sk"></div><div class="sk w60"></div></div>
+      <div class="sub">Profil per simbol (override global)</div><div id="profsym"></div>
+    </section>
+
+    <section class="card" data-panel="sym"><h3>Simbol <small>switch ON/OFF · status sendiri-sendiri</small></h3>
+      <div id="syms"><div class="sk"></div><div class="sk w60"></div></div>
+    </section>
+
+    <section class="card" data-panel="burst"><h3>Burst <small id="burstcfg"></small></h3>
+      <div class="kv" id="burstkv"><div class="sk"></div><div class="sk"></div></div>
+      <div id="forced" style="margin-top:6px;font-size:12px"></div>
+    </section>
+
+    <section class="card" data-panel="conn"><h3>Koneksi & kesehatan <small>dicek tiap 5 dtk</small></h3>
+      <div class="kv" id="connkv"><div class="sk"></div><div class="sk"></div></div>
+      <div class="sub">Indikator XAUUSD_Bridge_Draw di chart MT5</div>
+      <div id="bridgecharts" style="font-size:12px"></div>
+    </section>
+
+    <section class="card detail" id="info" data-panel="info"><h3>Detail</h3>
+      <div class="mut" style="font-size:12px">Arahkan kursor ke objek di chart untuk penjelasan singkat, atau klik objek / baris log sinyal untuk detail lengkap di sini.</div>
+    </section>
+  </aside>
+</div>
+
+<!-- =================== LACI PENGATURAN =================== -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Atur dashboard">
+  <div class="drawer-hd"><b>Atur dashboard</b><button id="drawerClose" title="Tutup (Esc)">✕</button></div>
+  <div class="drawer-bd">
+    <div class="grp">Tampilan</div>
+    <label class="sw"><input type="checkbox" data-v="compact"><span class="knob"></span>Mode ringkas (lebih padat)</label>
+    <label class="sw"><input type="checkbox" data-v="labels" checked><span class="knob"></span>Label teks di chart</label>
+    <label class="sw"><input type="checkbox" data-v="live" checked><span class="knob"></span>Update otomatis</label>
+    <label class="sw"><input type="checkbox" data-v="spark" checked><span class="knob"></span>Grafik equity mini</label>
+    <div class="optrow"><span>Tinggi chart</span><span class="seg mini" data-opt="height"><button data-val="420">S</button><button data-val="560">M</button><button data-val="720">L</button></span></div>
+    <div class="optrow"><span>Jumlah candle</span><span class="seg mini" data-opt="bars"><button data-val="150">150</button><button data-val="300">300</button><button data-val="500">500</button></span></div>
+    <div class="optrow"><span>Lebar sidebar</span><span class="seg mini" data-opt="side"><button data-val="300">S</button><button data-val="360">M</button><button data-val="440">L</button></span></div>
+    <div class="grp">Panel samping <small>tampil / sembunyi · ↑↓ urutan</small></div>
+    <div class="order" id="orderSide"></div>
+    <div class="grp">Tab data di bawah chart</div>
+    <div class="order" id="orderTabs"></div>
+    <div class="drawer-ft">
+      <button id="expandAll">Buka semua panel terlipat</button>
+      <button id="resetLayout">Reset ke bawaan</button>
+    </div>
+  </div>
+</aside>
+
+<script>
+const $ = s => document.querySelector(s);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const C = Object.fromEntries(['up','down','gold','blue','purple','teal','orange','gray','cyan','pink','text','muted','line','panel','ok','warn','err'].map(k=>[k,css('--'+k)]));
+// tooltip Plotly: latar & teks dari token tema (bukan dari warna trace yang bisa hampir transparan)
+const HL = {bgcolor:css('--bg-tooltip'), bordercolor:css('--border-tooltip'), align:'left',
+            font:{color:css('--text-on-tooltip'), size:12.5, family:'Segoe UI, system-ui, sans-serif'}};
+const MONO = s => String(s).replace(/(\d[\d.,:%]*)/g,'<span style="font-family:Consolas,monospace">$1</span>');
+function styleHover(traces){ traces.forEach(t=>{ t.hoverlabel = HL; if(t.hovertext) t.hovertext = t.hovertext.map(MONO); }); return traces; }
+const store = { get(k,d){ try{ const v=localStorage.getItem('xau_'+k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
+                set(k,v){ try{ localStorage.setItem('xau_'+k,JSON.stringify(v)); }catch(e){} } };
+let SYMF=store.get('symf','');     // filter simbol untuk tabel (''=semua)
+let selected=null;                 // id agregat posisi yang disorot (sinkron tabel Posisi <-> chart)
+let CFG=null, SYM=null, TF=store.get('tf','M5'), chartData=null, state=null, uirev=1, xview=null, lastRev=null, lastEntries=[];
+const eqHist=[];
+
+// ---------------- format angka (konsisten di seluruh dashboard)
+const nf = (v,d) => v==null||isNaN(v) ? '–' : Number(v).toLocaleString('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d});
+const money = v => nf(v,0);                 // rupiah: tanpa desimal, pemisah ribuan
+const price = v => v ? nf(v,2) : '–';       // harga emas: 2 desimal
+const pct = (v,d=2) => nf(v,d)+'%';
+const lot = v => nf(v,2);
+const sgn = (v,f=money) => `<span class="${v>0?'pos':v<0?'neg':''}">${v>0?'+':''}${f(v)}</span>`;
+const hm = t => new Date(t*1000).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+const tlabel = t => new Date(t*1000).toLocaleString('id-ID',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+const wrap = (s,n=60) => String(s).replace(new RegExp(`(.{1,${n}})(\\s|$)`,'g'),'$1<br>');
+const rgba = (hex,a) => { const n=parseInt(hex.slice(1),16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; };
+// lapisan chart: pilihan user DAN skill pemiliknya ON (skill OFF = lapisan tidak digambar, sama dengan MT5)
+const layers = () => { const S=(state&&state.control&&state.control.layers)||{};
+  return Object.fromEntries([...document.querySelectorAll('[data-l]')].map(e=>[e.dataset.l, e.checked && S[e.dataset.l]!==false])); };
+const live = st => layers().old || !['batal','terisi','ditembus','selesai'].includes(st);
+const dirTag = d => `<span class="tag ${d==='BUY'?'buy':'sell'}">${d}</span>`;
+
+const POLLERS=[];
+const refreshAll = () => POLLERS.forEach(r=>r(true));
+function poll(fn, ms){ let busy=false; const run=async(force)=>{ if(busy||(!force&&(document.hidden||!VIEW.live))) return; busy=true; try{ await fn(); }catch(e){} busy=false; }; run(true); setInterval(()=>run(), ms); POLLERS.push(run); return run; }
+// POST wajib application/json: server menolak (415) selain itu -> halaman web lain tidak bisa mengirim perintah (anti-CSRF)
+const j = (u,opt) => fetch(u, opt&&opt.method==='POST' ? {...opt, headers:{'Content-Type':'application/json', ...(opt.headers||{})}} : opt).then(r=>r.json());
+function pill(id, cls, title, sub){ const el=$(id); el.className='pill '+cls; el.innerHTML=`<span class="d"></span><div><b>${title}</b><small>${sub}</small></div>`; }
+function sideTop(){ document.documentElement.style.setProperty('--side-top', ($('#top').offsetHeight+12)+'px'); }
+
+// ================================================================== status
+async function loadState(s){
+  state = s || await j('/api/state');
+  const H = state.health || {items:{}}, I = H.items || {};
+  const running = !!state.bot_running;
+  const since = x => x && x.since ? hm(x.since) : '';
+
+  // ---- peringatan & data basi
+  const OV = Object.entries(((state.control||{}).override)||{}).filter(([k,o])=>o.mode==='RUN'&&o.until);
+  state.alerts = (state.alerts||[]).concat(OV.map(([k,o])=>['warn', `TETAP RUN ${k}: anggaran harian & cooldown dilewati, lot ×${o.lot_mult} — sisa ${Math.max(0,Math.round((o.until-Date.now()/1000)/60))} menit (s/d ${hm(o.until)})`]));
+  $('#alerts').innerHTML = (state.alerts||[]).map(([lv,t])=>`<div class="alert al-${lv}">${lv==='critical'?'⛔ ':lv==='error'?'⚠ ':lv==='warn'?'⏸ ':'ℹ '}${t}</div>`).join('');
+  const stale = !running || H.monitored===false || (I.mt5 && I.mt5.ok===false);
+  document.body.classList.toggle('stale', stale);
+  $('#staleOv').classList.toggle('show', stale);
+  $('#staleTxt').textContent = !running ? `Bot tidak berjalan (update terakhir ${state.ts?hm(state.ts):'belum pernah'}). Angka & posisi di layar bisa sudah berubah.`
+    : `MT5 terputus sejak ${since(I.mt5)} — ${I.mt5?I.mt5.detail:''}. Auto-reconnect berjalan.`;
+  sideTop();
+
+  // ---- pill status
+  const mMode = (state.mode||'').toUpperCase();
+  if (mMode === 'DEMO') {
+    $('#mode').style.display = 'none';
+  } else {
+    $('#mode').style.display = '';
+    $('#mode').textContent = mMode || '–';
+    $('#mode').className = 'mode '+(state.mode||'');
+  }
+  const m = I.mt5;
+  pill('#p-mt5', !m?'off':m.ok?(I.algo&&I.algo.ok===false&&state.mode!=='paper'?'warn':'ok'):'err', 'MT5',
+       !m?'memeriksa…':m.ok?`${(m.detail.match(/ping (\d+) ms/)||[])[1]||'–'} ms · Algo ${I.algo&&I.algo.ok?'ON':'OFF'}`:`PUTUS sejak ${since(m)}`);
+  pill('#p-bot', running?'ok':'err', 'Bot', running?`berjalan · update ${Math.max(0,Math.round(Date.now()/1000-state.ts))} dtk`:`MATI sejak ${state.ts?hm(state.ts):'–'}`);
+  const br = I.bridge;
+  pill('#p-bridge', !br?'off':br.ok===null?'off':br.ok?'ok':'err', 'Bridge MT5',
+       !br?'memeriksa…':br.ok===null?'tidak dipakai (setup ini)':br.ok?'gambar aktif':`PUTUS sejak ${since(br)}`);
+  const B = state.burst||{}, on = running && B.active;
+  pill('#p-burst', on?'ok':(B.reason||'').startsWith('dimatikan')?'warn':'err', on?'Burst ACTIVE':'Burst INACTIVE',
+       on?`${B.size} tiket × ${pct(B.risk_per_ticket_pct)} · ${B.today??0} hari ini`:(B.reason||'–'));
+  const g = state.guards||{}, d = state.day||{};
+  const rk = g.halt?['err','HALT max drawdown']:d.halted?['err','rem rugi harian aktif']:g.pause?['warn','PAUSE']
+          :g.loss_pause_until>Date.now()/1000?['warn','jeda kalah beruntun']:['ok',`harian ${pct(d.pnl_pct||0)} / −${d.limit_pct}%`];
+  pill('#p-risk', rk[0], 'Rem risiko', rk[1]);
+  syncBurstSw(B, running);
+  syncNewsSw(state, running);
+  renderNteHud(state, running);
+
+  // ---- ringkasan akun
+  const a = state.account||{};
+  const eq = state.mode==='paper' ? state.bot_equity : a.equity;
+  $('#eq').innerHTML = `${money(eq)} <span class="mut" style="font:400 12px var(--sans)">${a.currency||''}</span>`;
+  $('#eqsrc').textContent = state.mode==='paper' ? 'equity virtual (paper)' : 'equity akun MT5';
+  if(eq && running){ eqHist.push([Date.now(),eq]); if(eqHist.length>1200) eqHist.shift(); }
+  if(eqHist.length>1) Plotly.react('eqspark',[{x:eqHist.map(p=>new Date(p[0])),y:eqHist.map(p=>p[1]),mode:'lines',line:{color:C.cyan,width:1.5},hoverinfo:'x+y'}],
+    {hoverlabel:HL,paper_bgcolor:C.panel,plot_bgcolor:C.panel,margin:{l:0,r:0,t:0,b:0},xaxis:{visible:false},yaxis:{visible:false},showlegend:false},{displayModeBar:false,responsive:true});
+  const used = Math.max(0,-(d.pnl_pct||0))/(d.limit_pct||1);
+  $('#dpnl').innerHTML = `${sgn(d.pnl||0)} <span class="mut">(${pct(d.pnl_pct||0)})</span>`;
+  $('#dlim').innerHTML = d.halted ? '<span class="c-err">AKTIF</span>' : `${nf(used*100,0)}% dari −${d.limit_pct}%`;
+  $('#dmeter').style.cssText = `width:${Math.min(100,used*100)}%;background:${used>.7?C.err:used>.4?C.warn:C.ok}`;
+  const ddf = (state.drawdown_pct||0)/(state.max_drawdown_pct||1);
+  $('#dd').textContent = `${pct(state.drawdown_pct||0)} / ${pct(state.max_drawdown_pct,0)}`;
+  $('#ddmeter').style.cssText = `width:${Math.min(100,ddf*100)}%;background:${ddf>.7?C.err:ddf>.4?C.warn:C.ok}`;
+  const t=state.stats_total||{}, td=state.stats_today||{};
+  $('#wrd').innerHTML = `${pct(td.win_rate||0,1)} <span class="mut">(${td.wins??0}/${td.trades??0})</span>`;
+  $('#wrt').innerHTML = `${pct(t.win_rate||0,1)} <span class="mut">(${t.wins??0}/${t.trades??0})</span> · ${nf(t.pf||0,2)}`;
+  const r = state.risk||{};
+  // batas risiko terbuka dihitung PER GRUP (emas bersama, tiap crypto sendiri)
+  const G = r.groups||{};
+  $('#orisk').innerHTML = Object.keys(G).length>1
+    ? Object.entries(G).map(([g,x])=>`<span title="${x.positions}/${x.max_positions} posisi">${g} ${nf(x.open_pct,2)}/${nf(x.cap_pct,1)}%</span>`).join('<br>')
+    : `${pct(r.open_pct||0)} / ${pct(r.cap_pct,2)}`;
+
+  // ---- posisi terbuka (tabel) — bisa difilter per simbol
+  const allPos = state.positions||[];
+  const pos = allPos.filter(p=>!SYMF||p.symbol===SYMF);
+  const flt = pos.reduce((s,p)=>s+(p.profit||0),0);
+  $('#poscount').textContent = pos.length;
+  $('#positions').innerHTML = pos.length ? `<table><thead><tr><th class="l">Waktu buka</th><th class="l">Simbol</th><th class="l">Arah</th><th>Lot</th><th>Entry</th><th>SL</th><th>TP</th><th>SL/TP di MT5</th><th>P/L</th></tr></thead><tbody>` +
+    pos.map(p=>`<tr class="click" data-agg="AGG_${p.symbol}_${p.dir}" data-sym="${p.symbol}"><td class="l">${p.time?hm(p.time):'–'}</td><td class="l t">${p.symbol}</td><td class="l">${dirTag(p.dir)}</td><td>${lot(p.volume)}</td>
+      <td>${price(p.open)}</td><td class="neg">${price(p.sl)}</td><td class="pos">${p.tp?price(p.tp):'<span class="mut">trailing</span>'}</td><td class="l ${p.sltp_warn?'neg':''}">${p.sltp_warn?'<b>⚠ ':''}SL ${p.sl_ok?'ya':'TIDAK'} · TP ${p.tp_ok?'ya':'tidak'}${p.sltp_warn?'</b>':''}</td><td>${sgn(p.profit)}</td></tr>`).join('') +
+    `</tbody><tfoot><tr><td class="l" colspan="3">Total</td><td>${lot(pos.reduce((s,p)=>s+p.volume,0))}</td><td colspan="4"></td><td>${sgn(flt)}</td></tr></tfoot></table>`
+    : `<div class="mut">Tidak ada posisi terbuka${SYMF?' di '+SYMF:''}.</div>`;
+  document.querySelectorAll('#positions tr.click').forEach(tr=>tr.onclick=()=>{
+    selected = tr.dataset.agg; if(SYM!==tr.dataset.sym){ SYM=tr.dataset.sym; store.set('sym',SYM); renderTabs(); resetView(); }
+    else if(chartData) drawChart();
+    setTab('pos'); });
+
+  // ---- simbol: switch ON/OFF + status sendiri-sendiri (bukan satu angka gabungan)
+  const SY = state.symbols||{};
+  $('#syms').innerHTML = Object.entries(SY).map(([s,v])=>{
+    const st=v.stats||{total:{},today:{}}, lc=v.last_cross, P=v.params||{};
+    const closed = v.available && v.tick_age!=null && v.tick_age>180;
+    const [cls,lab] = !v.available?['off','TIDAK ADA DI AKUN']:!running?['err','BOT MATI']:!v.active?['off','STOPPED']
+      :closed?['off','PASAR TUTUP']:(v.override||{}).mode==='BLOCK'?['err','DITAHAN MANUAL']:(v.override||{}).mode==='RUN'?['warn','RUN PAKSA']
+      :(v.status||'').startsWith('ENTRY')?['ok','ENTRY']:v.why_not&&/anggaran|rem rugi/.test(v.why_not.stage)?['err','TERBLOKIR (anggaran)']
+      :v.why_not&&/cooldown/.test(v.why_not.stage)?['warn','COOLDOWN']:v.ready===false?['warn','RUNNING · TERBLOKIR']:['ok','RUNNING'];
+    return `<div class="sym ${v.active?'':'dim'}"><div class="hd">
+        <label class="sw" title="${v.available?'ON = boleh entry baru. OFF = tidak entry; posisi terbuka tetap dikelola SL/trailing':'simbol tidak ada di akun ini'}">
+          <input type="checkbox" data-sym="${s}" ${v.active?'checked':''} ${v.available?'':'disabled'}><span class="knob"></span><b>${s}</b></label>
+        ${v.direction?dirTag(v.direction)+` <span class="num mut">×${v.positions}</span>`:''}
+        <span class="state-tag ${cls}" style="margin-left:auto">${lab}</span></div>
+      ${v.available?`<div class="symkv num">
+        <span>P/L hari ini</span><b>${sgn(st.today.pnl||0)}</b><span>WR hari ini</span><b>${pct(st.today.win_rate||0,0)} <span class="mut">(${st.today.trades||0})</span></b>
+        <span>Floating</span><b>${sgn(v.floating||0)}</b><span>P/L total</span><b>${sgn(st.total.pnl||0)}</b></div>
+      <div class="st">${!v.active?'dihentikan — tidak ada entry baru':closed?`pasar tutup (tick ${Math.round(v.tick_age/60)} mnt lalu)`:running?(v.status||'–'):'bot tidak berjalan'}</div>
+      ${v.available?`<div class="ovsel"><span class="seg mini" data-ovsym="${s}">${[['AUTO','OTOMATIS'],['RUN','TETAP RUN'],['BLOCK','TETAP BLOKIR']].map(([m,l])=>
+          `<button data-m="${m}" class="${((v.override||{}).mode||'AUTO')===m?'on':''}" ${PEND?'disabled':''}>${l}</button>`).join('')}</span>
+        ${(v.override||{}).mode==='RUN'&&v.override.until?`<small class="c-warn">s/d ${hm(v.override.until)} · lot ×${v.override.lot_mult}</small>`:''}</div>
+        <div class="cand">anggaran harian akun terpakai <b>${nf(((state.control||{}).budget||{}).used_pct||0,0)}%</b> dari batas ${((state.control||{}).budget||{}).limit_pct}%
+          · grup ${v.group}: risiko terbuka ${nf(((r.groups||{})[v.group]||{}).open_pct||0,2)}% / batas ${((r.groups||{})[v.group]||{}).cap_pct}%
+          ${v.budget_fit!=null&&v.budget_fit<((v.params||{}).burst||0)?` · <span class="c-warn">muat ${v.budget_fit} tiket</span>`:''}</div>
+        ${Object.entries(v.risk_same_dir||{}).map(([dr,x])=>`<div class="cand">risiko searah ${dr}: ${x.count} posisi · ${lot(x.volume)} lot · avg ${price(x.avg_entry)} ·
+          <span class="${x.risk_if_all_sl_pct>1?'c-err':x.risk_if_all_sl_pct>0.3?'c-warn':''}">kalau semua SL kena: -${money(x.risk_if_all_sl)} (-${nf(x.risk_if_all_sl_pct,2)}% equity)</span></div>`).join('')}`:''}
+      ${v.active&&running&&v.why_not?`<div class="whynot"><b>Kenapa belum entry?</b> ${v.why_not.stage} — <span class="mut">${v.why_not.reason}</span><br><span class="c-warn">Lanjut: ${v.why_not.eta}</span></div>`:''}
+      ${v.active&&(v.blockers||[]).length>1?`<div class="blk">${v.blockers.slice(1).join(' · ')}</div>`:''}
+      ${v.active&&lc&&lc.time?`<div class="cand">kandidat terakhir: ${lc.dir} ${tlabel(lc.time)} (${lc.bars_ago} bar lalu) → ${lc.result}</div>`:''}
+      <div class="cand">${v.timeframe} · ${pct(P.risk_pct)}×${P.burst} · SL ${P.sl_atr}×ATR · trail ${P.trail_atr}×ATR · grup ${v.group} · ${v.trade_days&&v.trade_days.length===7?'24/7':'jam bursa'}${v.active&&v.atr!=null?` · ATR ${nf(v.atr,2)} (${nf(v.atr_pct,2)}%)`:''}</div>`:''}
+    </div>`; }).join('') || '<div class="mut">–</div>';
+  document.querySelectorAll('#syms input[data-sym]').forEach(e=>e.onchange=async()=>{
+    const s=e.dataset.sym, on=e.checked;
+    if(!confirm(on?`Nyalakan trading ${s}?\n\nBot boleh membuka posisi baru di ${s} (semua rem risiko tetap berlaku).`
+                  :`Hentikan trading ${s}?\n\nTidak ada entry baru di ${s}. Posisi ${s} yang terbuka TETAP dikelola SL/trailing.`)){ e.checked=!on; return; }
+    const r=await j('/api/control',{method:'POST',body:JSON.stringify({action:'symbol',symbol:s,on})});
+    if(r.state) loadState(r.state); loadAudit(); });
+
+  document.querySelectorAll('[data-ovsym] button').forEach(bt=>bt.onclick=()=>{
+    const s=bt.parentElement.dataset.ovsym, m=bt.dataset.m, F=(state.control||{}).force_run||{};
+    if(bt.classList.contains('on')) return;
+    const msg = m==='RUN' ? `TETAP RUN ${s}?\n\nHanya melewati anggaran harian & cooldown. Lot ×${F.lot_mult??0.5}, kedaluwarsa otomatis (akhir hari server / ${F.max_hours??8} jam).\nRem rugi harian ${state.day.limit_pct}%, HALT drawdown, margin, spread & batas posisi TETAP berlaku.\nSimbol lain di grup TIDAK ikut berubah.`
+      : m==='BLOCK' ? `TETAP BLOKIR ${s}? Tidak ada entry baru sampai diubah (posisi terbuka tetap dikelola).` : `Kembalikan ${s} ke OTOMATIS?`;
+    if(!confirm(msg)) return;
+    sendCmd({action:'override', symbol:s, mode:m}, 'ov', `mode ${s} → ${bt.textContent}`); });
+
+  // ---- performa per simbol + gabungan total
+  const rows = Object.entries(SY).filter(([s,v])=>v.available||((v.stats||{}).total||{}).trades);
+  const tot = state.stats_total||{}, tday = state.stats_today||{};
+  $('#perf').innerHTML = `<table><thead><tr><th class="l">Simbol</th><th class="l">Status</th><th>Posisi</th><th>Floating</th>
+      <th>Trade hari ini</th><th>WR hari ini</th><th>P/L hari ini</th><th>Trade total</th><th>WR total</th><th>PF</th><th>P/L total</th></tr></thead><tbody>`+
+    rows.map(([s,v])=>{ const a=(v.stats||{}).today||{}, b=(v.stats||{}).total||{};
+      return `<tr class="click" data-s="${s}"><td class="l t"><b>${s}</b></td><td class="l t ${v.active?'c-ok':'mut'}">${!v.available?'n/a':v.active?'Running':'Stopped'}</td>
+        <td>${v.positions||0}</td><td>${sgn(v.floating||0)}</td><td>${a.trades||0}</td><td>${pct(a.win_rate||0,1)}</td><td>${sgn(a.pnl||0)}</td>
+        <td>${b.trades||0}</td><td>${pct(b.win_rate||0,1)}</td><td>${nf(b.pf||0,2)}</td><td>${sgn(b.pnl||0)}</td></tr>`; }).join('')+
+    `</tbody><tfoot><tr><td class="l">TOTAL</td><td class="l t">${rows.filter(([s,v])=>v.active&&v.available).length} running</td>
+      <td>${allPos.length}</td><td>${sgn(allPos.reduce((s,p)=>s+(p.profit||0),0))}</td><td>${tday.trades||0}</td><td>${pct(tday.win_rate||0,1)}</td><td>${sgn(tday.pnl||0)}</td>
+      <td>${tot.trades||0}</td><td>${pct(tot.win_rate||0,1)}</td><td>${nf(tot.pf||0,2)}</td><td>${sgn(tot.pnl||0)}</td></tr></tfoot></table>`;
+  document.querySelectorAll('#perf tr.click').forEach(tr=>tr.onclick=()=>setSymFilter(tr.dataset.s));
+
+  renderControl();
+  const lsig = JSON.stringify((state.control||{}).layers||{});
+  if(lsig !== window._lsig){ window._lsig = lsig; chartData && drawChart(); }
+
+  renderLevels();
+
+  // ---- burst
+  $('#burstcfg').textContent = `${B.size??'–'} tiket × ${pct(B.risk_per_ticket_pct)} · ${B.mode||''}`;
+  $('#burstkv').innerHTML = `
+    <span>Status</span><b class="${on?'c-ok':'c-warn'}">${on?'ACTIVE':'INACTIVE'}</b>
+    <span>Timeframe eksekusi</span><b>${(B.exec_tf||[]).join(', ')||'–'}</b>
+    <span>Burst hari ini / total</span><b>${B.today??0} / ${B.total??0}</b>
+    <span>Jeda rata-rata</span><b>${B.avg_gap_min!=null?nf(B.avg_gap_min,1)+' mnt':'–'}</b>
+    <span>Burst terakhir</span><b>${B.last?new Date(B.last).toLocaleTimeString('id-ID'):'–'}</b>
+    <span>Burst terbuka</span><b>${r.bursts_open??0}</b>`;
+  const F = state.forced_scan;
+  $('#forced').innerHTML = state.burst_now_pending ? '<span class="c-warn">⏳ "Aktifkan Burst" menunggu diproses bot…</span>'
+    : F ? `<span class="mut">Evaluasi segera ${hm(F.time)}:</span> ` + Object.entries(F.result).map(([k,v])=>`<b>${k}</b> ${v}`).join(' · ') : '';
+
+  // ---- koneksi & kesehatan
+  const c = state.connection||{}, bs = state.bridge||{};
+  $('#connkv').innerHTML = `
+    <span>MT5 (cek langsung)</span><b class="${m&&m.ok?'c-ok':'c-err'}">${m?(m.ok?'terhubung':'PUTUS'):'–'}</b>
+    <span>Detail</span><b style="font:400 11px var(--sans);white-space:normal">${m?m.detail:'–'}</b>
+    <span>Algo Trading</span><b class="${I.algo&&I.algo.ok?'c-ok':'c-warn'}">${I.algo?(I.algo.ok?'ON':'OFF'):'–'}${state.mode==='paper'?' <span class="mut">(paper)</span>':''}</b>
+    <span>Bot</span><b class="${running?'c-ok':'c-err'}">${running?'berjalan':'MATI'} · ${state.ts?hm(state.ts):'–'}</b>
+    <span>Reconnect bot → MT5</span><b>${c.reconnects??0}×</b>
+    <span>Bridge gambar</span><b class="${br&&br.ok?'c-ok':br&&br.ok===false?'c-err':'mut'}">${br?(br.ok===null?'tidak dipakai':br.ok?`OK · ${bs.heartbeat_age} dtk · ${bs.loop_ms??'–'} ms`:'PUTUS'):'–'}</b>
+    <span>Sesi · berita</span><b style="font-family:var(--sans)">${g.session||'–'}${g.session_ok?'':' (nonaktif)'} · ${g.news_block?'<span class="c-err">BLOKIR</span>':'aman'}</b>`;
+  // chart yang indikatornya berhenti > 5 menit hampir selalu sudah ganti timeframe / ditutup -> tidak ditampilkan
+  const ch = (bs.charts||[]).filter(x=>x.status==='ok'||x.age<300);
+  $('#bridgecharts').innerHTML = !bs.expected ? '<span class="mut">Setup ini tidak memakai bridge gambar.</span>'
+    : ch.length ? `<table><thead><tr><th class="l">Chart</th><th class="l">Status</th><th>Objek</th><th>Update</th></tr></thead><tbody>`+
+      ch.map(x=>`<tr><td class="l t">${x.symbol} ${x.tf}</td><td class="l t ${x.status==='ok'?'c-ok':'c-err'}">${x.status}</td><td>${x.objects}</td><td>${x.age} dtk</td></tr>`).join('')+'</tbody></table>'
+    : '<span class="mut">Belum ada — pasang indikator di chart MT5 (README "Auto-draw di MT5").</span>';
+  $('#log').textContent = (state.recent||[]).slice(-14).join('\n');
+}
+async function loadHealth(){ const R=await j('/api/health?n=10'); $('#healthlog').textContent = R.log.length?R.log.join('\n'):'belum ada kejadian'; }
+
+// ================================================================== simbol & timeframe
+function renderTabs(){
+  // semua simbol config ditampilkan (futureproof, mis. XAUUSDc); yang belum ada di akun ini digrayscale & disabled
+  const all = CFG.all_symbols || CFG.symbols;
+  $('#tabs').innerHTML = all.map(s=>{ const avail = CFG.symbols.includes(s);
+    return `<button class="${s===SYM?'on':''} ${avail?'':'off'}" data-s="${s}" ${avail?'':'disabled title="tidak ada di akun ini"'}>${s}</button>`; }).join('');
+  $('#tfs').innerHTML = CFG.chart_tfs.map(t=>`<button class="${t===TF?'on':''}" data-t="${t}">${t}</button>`).join('');
+  document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{ SYM=b.dataset.s; store.set('sym',SYM); resetView(); });
+  document.querySelectorAll('#tfs button').forEach(b=>b.onclick=()=>{ TF=b.dataset.t; store.set('tf',TF); resetView(); });
+  const ex = CFG.exec_tf[SYM];
+  $('#tfnote').innerHTML = `Chart view <b>${TF}</b> · Execution timeframe <b>${ex}</b> <span title="Timeframe chart hanya mengubah tampilan & analisis. Strategi tetap mengambil keputusan di timeframe eksekusi (config symbols.${SYM}.timeframe).">ⓘ</span>`;
+}
+function resetView(){ if(typeof startStream==='function') startStream(); if(typeof loadNews==='function') loadNews().catch(()=>{}); xview=null; uirev++; lastRev=null; chartData=null; renderTabs(); Plotly.purge('chart'); $('#chart')._bound=false; $('#chartLoading').classList.add('show'); loadChart(); }
+
+// ================================================================== chart
+async function loadChart(){
+  const want = SYM+'|'+TF;
+  const d = await j(`/api/chart?symbol=${SYM}&tf=${TF}&bars=${VIEW.bars}`);
+  if(want !== SYM+'|'+TF) return;
+  if(d.error){ $('#chartLoading').innerHTML = `<div class="c-err">${d.error}</div>`; $('#chartLoading').classList.add('show'); return; }
+  $('#chartLoading').classList.remove('show');
+  if(HIST) return;
+  const same = chartData && lastRev===d.rev && chartData.tf===d.tf && chartData.symbol===d.symbol
+               && JSON.stringify(chartData.plans)===JSON.stringify(d.plans) && (chartData.news||[]).length===(d.news||[]).length;
+  chartData = d;
+  if(same){ Plotly.restyle('chart',{open:[d.candles.o],high:[d.candles.h],low:[d.candles.l],close:[d.candles.c]},[0]); return; }
+  lastRev = d.rev; drawChart();
+}
+function xOf(t){
+  const T = chartData.candles.t, n = T.length, sec = chartData.tf_sec;
+  if(t >= T[n-1]) return n-1 + (t - T[n-1])/sec;
+  if(t < T[0]) return -1;
+  let lo=0, hi=n-1; while(lo<hi){ const m=(lo+hi+1)>>1; if(T[m]<=t) lo=m; else hi=m-1; } return lo;
+}
+function yRange(a,b){
+  const D=chartData, i0=Math.max(0,Math.floor(a)), i1=Math.min(D.candles.t.length-1,Math.ceil(b));
+  let hi=-Infinity, lo=Infinity; for(let i=i0;i<=i1;i++){ hi=Math.max(hi,D.candles.h[i]); lo=Math.min(lo,D.candles.l[i]); }
+  const pad=(hi-lo)*0.08; return [lo-pad, hi+pad];
+}
+function drawChart(){
+  const D = chartData, L = layers(), n = D.candles.t.length, X = [...Array(n).keys()];
+  const traces=[], shapes=[], ann=[];
+  const hi = Math.max(...D.candles.h), lo = Math.min(...D.candles.l), pad=(hi-lo)*0.02;
+  const tip = (x,y,title,desc,col) => traces.push({type:'scatter',mode:'markers',x:[x],y:[y],marker:{size:9,color:rgba(col,.01)},
+      hovertext:[`<b>${title}</b><br>${wrap(desc)}`],hoverinfo:'text',showlegend:false,customdata:[JSON.stringify({t:title,d:desc})]});
+  const clip = x => Math.max(x,0);
+  traces.push({type:'candlestick',x:X,open:D.candles.o,high:D.candles.h,low:D.candles.l,close:D.candles.c,
+    increasing:{line:{color:C.up},fillcolor:C.up},decreasing:{line:{color:C.down},fillcolor:C.down},
+    text:D.candles.t.map(tlabel),hoverinfo:'text+y',showlegend:false});
+  if(L.ema){
+    [['5', '#00B2FF'], ['8', '#FF00CB'], ['21', '#f6c177']].forEach(([k,col])=>{
+      if(D.ema && D.ema[k]) traces.push({type:'scatter',mode:'lines',x:X,y:D.ema[k],line:{width:1.2,color:col},hoverinfo:'skip',showlegend:false});
+    });
+  }
+  if(L.candle){
+    const stack={}, groups={1:[],'-1':[],0:[]};
+    // label pola candlestick: hanya N bar terakhir (default 60) & maksimum jumlah label per layar
+    // (default 25) supaya tidak memenuhi chart (28 Sep, temuan: label Hr/E/Pin/ES menumpuk)
+    const RECENT_BARS=60, MAX_LABELS=25, cut=D.candles.t[Math.max(0,D.candles.t.length-RECENT_BARS)];
+    D.candle_patterns.filter(p=>(L.doji||p.key!=='doji')&&p.time>=cut).slice(-MAX_LABELS).forEach(p=>{
+      const x=xOf(p.time); if(x<0) return; const k=x+(p.dir<0?'h':'l'); stack[k]=(stack[k]||0)+1;
+      const off=(hi-lo)*0.012*stack[k];
+      groups[p.dir].push({...p,x,y:p.dir<0?D.candles.h[x]+off:D.candles.l[x]-off}); });
+    [[1,C.up,'triangle-up','bottom center'],[-1,C.down,'triangle-down','top center'],[0,C.gray,'circle','bottom center']].forEach(([k,col,sym,pos])=>{
+      const a=groups[k]; if(!a.length) return;
+      traces.push({type:'scatter',mode:'markers+text',x:a.map(p=>p.x),y:a.map(p=>p.y),text:a.map(p=>p.short),textposition:pos,
+        textfont:{size:9,color:col},marker:{symbol:sym,size:7,color:col},hovertext:a.map(p=>`<b>${p.name}</b><br>${wrap(p.desc)}`),
+        hoverinfo:'text',showlegend:false,customdata:a.map(p=>JSON.stringify({t:p.name,d:p.desc,time:p.time}))}); });
+  }
+  const S = D.structure;
+  // maks 3 zona di atas & 3 di bawah harga (bukan 4 campur) — S/R lokal (TF chart); S/R multi-TF ada di layer srmtf
+  const srCap = S.levels.filter(lv=>lv.kind==='support').slice(0,3).concat(S.levels.filter(lv=>lv.kind==='resistance').slice(0,3));
+  if(L.sr) srCap.forEach(lv=>{ const col=lv.kind==='support'?C.up:C.down, x0=clip(xOf(lv.t0));
+    shapes.push({type:'line',x0,x1:n-1,y0:lv.price,y1:lv.price,line:{color:rgba(col,.55),width:1.2,dash:'dot'}});
+    ann.push({x:n-1,y:lv.price,xanchor:'left',text:lv.label,showarrow:false,font:{size:10,color:col},bgcolor:rgba('#0d1117',.7)});
+    tip(x0,lv.price,`${lv.kind==='support'?'Support':'Resistance'} ${price(lv.price)} (${lv.touches}x)`,lv.desc,col); });
+  if(L.trend){
+    S.trendlines.filter(t=>live(t.status)).forEach(t=>{ const col=t.kind==='trend_up'?C.cyan:C.pink, x0=xOf(t.t0), x1=xOf(t.t1); if(x0<0) return;
+      shapes.push({type:'line',x0,x1,y0:t.y0,y1:t.y1,line:{color:col,width:1.6,dash:t.status==='batal'?'dash':'solid'}});
+      ann.push({x:x1,y:t.y1,text:t.label,showarrow:false,xanchor:'left',font:{size:10,color:col}}); tip(x0,t.y0,t.label,t.desc,col); });
+    const sw=S.swings.map(s=>({...s,x:xOf(s.time)})).filter(s=>s.x>=0);
+    traces.push({type:'scatter',mode:'markers',x:sw.map(s=>s.x),y:sw.map(s=>s.kind==='H'?s.price+pad*.4:s.price-pad*.4),
+      marker:{size:4,color:sw.map(s=>s.kind==='H'?C.down:C.up),symbol:'diamond'},hovertext:sw.map(s=>`Swing ${s.kind==='H'?'high':'low'} ${price(s.price)}`),hoverinfo:'text',showlegend:false});
+  }
+  if(L.chart) S.patterns.filter(p=>live(p.status)).forEach(p=>{
+    const col=p.dir>0?C.up:p.dir<0?C.down:C.gold, lab=`${p.label} · ${p.status}`, P=a=>[xOf(a[0]),a[1]];
+    if(p.points){ const pts=p.points.map(P).filter(q=>q[0]>=0); if(!pts.length) return;
+      traces.push({type:'scatter',mode:'lines+markers',x:pts.map(q=>q[0]),y:pts.map(q=>q[1]),line:{color:C.pink,width:2},marker:{size:6,color:C.pink},
+        hovertext:pts.map(()=>`<b>${lab}</b><br>${wrap(p.desc)}`),hoverinfo:'text',showlegend:false,customdata:pts.map(()=>JSON.stringify({t:lab,d:p.desc}))});
+      const top=pts.reduce((a,b)=>b[1]>a[1]?b:a); ann.push({x:top[0],y:top[1]+pad*1.5,text:`<b>${p.label}</b> (${p.status})`,showarrow:false,font:{size:11,color:C.pink},bgcolor:rgba('#0d1117',.75)}); }
+    if(p.neckline){ const [a,b]=p.neckline.map(P); shapes.push({type:'line',x0:clip(a[0]),y0:a[1],x1:b[0],y1:b[1],line:{color:col,width:1.4,dash:'dash'}});
+      ann.push({x:b[0],y:b[1],text:'neckline',showarrow:false,xanchor:'left',font:{size:9,color:col}}); }
+    if(p.lines){ p.lines.forEach(seg=>{ const [a,b]=seg.map(P); shapes.push({type:'line',x0:clip(a[0]),y0:a[1],x1:b[0],y1:b[1],line:{color:C.pink,width:1.6}}); });
+      const a=P(p.lines[0][0]); ann.push({x:clip(a[0]),y:a[1]+pad*1.5,text:`<b>${p.label}</b> (${p.status})`,showarrow:false,font:{size:11,color:C.pink}}); tip(clip(a[0]),a[1],lab,p.desc,C.pink); }
+    if(p.box){ const x0=clip(xOf(p.box[0])), x1=xOf(p.box[2]);
+      shapes.push({type:'rect',x0,y0:p.box[1],x1,y1:p.box[3],line:{color:C.pink,width:1},fillcolor:rgba(C.pink,.08)});
+      const [a,b]=p.pole.map(P); shapes.push({type:'line',x0:clip(a[0]),y0:a[1],x1:b[0],y1:b[1],line:{color:C.pink,width:2}});
+      ann.push({x:x0,y:p.box[3]+pad,text:`<b>${p.label}</b> (${p.status})`,showarrow:false,xanchor:'left',font:{size:11,color:C.pink}}); tip(x0,p.box[3],lab,p.desc,C.pink); }
+  });
+  const M = D.smc;
+  if(L.ob) M.order_blocks.filter(b=>live(b.status)).slice(-6).forEach(b=>{ const col=b.dir>0?C.up:C.down, x0=clip(xOf(b.t0)), x1=xOf(b.t1);
+    shapes.push({type:'rect',x0,x1,y0:b.bottom,y1:b.top,fillcolor:rgba(col,b.status==='batal'?.06:.18),line:{color:rgba(col,.7),width:1,dash:b.status==='batal'?'dot':'solid'}});
+    ann.push({x:x0,y:b.top,yanchor:'bottom',xanchor:'left',text:`OB${b.dir>0?'+':'−'} ${b.status}`,showarrow:false,font:{size:9,color:col}});
+    tip((x0+x1)/2,(b.top+b.bottom)/2,`${b.dir>0?'Bullish':'Bearish'} Order Block (${b.status}, dari ${b.src})`,M.desc[b.dir>0?'OB_bull':'OB_bear'],col); });
+  if(L.fvg) M.fvg.filter(g=>live(g.status)).slice(-8).forEach(g=>{ const col=g.dir>0?C.teal:C.orange, x0=clip(xOf(g.t0)), x1=xOf(g.t1);
+    shapes.push({type:'rect',x0,x1,y0:g.bottom,y1:g.top,fillcolor:rgba(col,g.status==='terisi'?.04:.13),line:{color:rgba(col,.6),width:1,dash:'dot'}});
+    ann.push({x:x0,y:g.bottom,yanchor:'top',xanchor:'left',text:'FVG',showarrow:false,font:{size:8,color:col}});
+    tip((x0+x1)/2,(g.top+g.bottom)/2,`${g.dir>0?'Bullish':'Bearish'} FVG (${g.status})`,M.desc[g.dir>0?'FVG_bull':'FVG_bear'],col); });
+  if(L.bos) M.events.slice(L.old?-12:-5).forEach(e=>{ const col=e.type==='CHoCH'?C.purple:C.blue, x0=clip(xOf(e.t_from)), x1=xOf(e.t); if(x1<0) return;
+    shapes.push({type:'line',x0,x1,y0:e.level,y1:e.level,line:{color:col,width:1.4,dash:e.type==='CHoCH'?'dashdot':'solid'}});
+    ann.push({x:(x0+x1)/2,y:e.level,yanchor:e.dir>0?'bottom':'top',text:`${e.type}${e.dir>0?'↑':'↓'}`,showarrow:false,font:{size:10,color:col}});
+    tip((x0+x1)/2,e.level,`${e.type} ${e.dir>0?'naik':'turun'} @ ${price(e.level)}`,M.desc[e.type],col); });
+  if(L.liq) M.liquidity.filter(q=>live(q.status)||q.status==='tersapu').slice(-6).forEach(q=>{ const x0=clip(xOf(q.t0)), x1=xOf(q.t1);
+    shapes.push({type:'line',x0,x1,y0:q.level,y1:q.level,line:{color:C.gold,width:1.2,dash:'dash'}});
+    ann.push({x:x0,y:q.level,yanchor:q.dir==='H'?'bottom':'top',xanchor:'left',text:`${q.dir==='H'?'EQH':'EQL'} ${q.status}`,showarrow:false,font:{size:9,color:C.gold}});
+    tip(x0,q.level,`${q.dir==='H'?'Equal highs':'Equal lows'} (${q.status})`,M.desc['LIQ_'+q.dir],C.gold);
+    if(q.t_sweep){ const xs=xOf(q.t_sweep); if(xs>=0) traces.push({type:'scatter',mode:'markers+text',x:[xs],y:[q.level],text:['sweep'],textposition:q.dir==='H'?'top center':'bottom center',
+      textfont:{size:9,color:C.gold},marker:{symbol:'x',size:10,color:C.gold},hovertext:[`<b>Liquidity sweep</b><br>${wrap(M.desc['SWEEP_'+q.dir])}`],hoverinfo:'text',showlegend:false,
+      customdata:[JSON.stringify({t:'Liquidity sweep',d:M.desc['SWEEP_'+q.dir]})]}); } });
+  if(L.trades) (D.trade_marks||[]).forEach(m=>{
+    const x0 = xOf(m.time); if(x0 < 0) return; const buy = m.dir==='BUY', xe = n+6;
+    if(m.status==='open_agg'){
+      // SATU garis ringkas untuk semua posisi searah simbol ini (lintas-burst), pita SL/TP —
+      // bukan satu garis per posisi (28 Sep: 4 burst BTCUSD saling menutupi sebelum ini)
+      const selId = 'AGG_'+SYM+'_'+m.dir;
+      shapes.push({type:'line',x0,x1:xe,y0:m.entry,y1:m.entry,line:{color:buy?C.up:C.down,width:selected===selId?3:2}});
+      if(m.sl_lo) shapes.push({type:'rect',x0,x1:xe,y0:m.sl_lo,y1:m.sl_hi||m.sl_lo,fillcolor:rgba(C.down,.12),line:{width:0}});
+      if(m.tp_lo) shapes.push({type:'rect',x0,x1:xe,y0:m.tp_lo,y1:m.tp_hi||m.tp_lo,fillcolor:rgba(C.up,.10),line:{width:0}});
+      ann.push({x:xe,y:m.entry,xanchor:'left',text:m.label,showarrow:false,font:{size:10,color:'#fff'},
+        bgcolor:rgba(buy?C.up:C.down,selected===selId?.9:.55)});
+      (m.bursts||[]).forEach(b=>{ const bx=xOf(b.time); if(bx<0) return;
+        traces.push({type:'scatter',mode:'markers',x:[bx],y:[b.open],marker:{symbol:buy?'triangle-up':'triangle-down',size:9,color:buy?C.up:C.down,line:{color:'#fff',width:1}},
+          hovertext:[`${b.count>1?b.count+'x ':''}${b.volume} lot @ ${price(b.open)} · SL ${price(b.sl)} · P/L ${sgn(b.pnl)}`],hoverinfo:'text',showlegend:false,
+          customdata:[JSON.stringify({t:m.dir+' '+SYM,d:`Bagian dari agregat ${m.label}. Burst ini: ${b.count}x ${b.volume} lot @ ${price(b.open)}, SL ${price(b.sl)}, P/L ${sgn(b.pnl)}.`})]}); });
+    } else {
+      const x1 = xOf(m.close_time);
+      traces.push({type:'scatter',mode:'lines+markers',x:[x0,x1],y:[m.open,m.close],line:{color:C.gray,width:1.5,dash:'dot'},
+        marker:{size:8,color:C.gray,symbol:[buy?'triangle-up':'triangle-down','x']},hovertext:[m.label,m.label],hoverinfo:'text',showlegend:false});
+      ann.push({x:x1,y:m.close,xanchor:'left',text:m.label,showarrow:false,font:{size:10,color:C.gray}});
+    }
+  });
+  const xe2 = n+8, nlo=Math.min(...D.candles.l), nhi=Math.max(...D.candles.h);
+  if(L.srmtf) ((D.sr_mtf||{}).zones||[]).forEach(z=>{ const col=z.kind==='S'?C.up:C.down, a=.08+.25*z.strength;
+    const dash={W1:'solid',D1:'dash',H4:'dot',H1:'dashdot'}[z.top_tf]||'dot';
+    shapes.push({type:'rect',x0:0,x1:xe2,y0:z.lo,y1:z.hi,fillcolor:rgba(col,a*.5),line:{width:0},layer:'below'});
+    shapes.push({type:'line',x0:0,x1:xe2,y0:z.price,y1:z.price,line:{color:rgba(col,.35+.6*z.strength),width:1+2.5*z.strength,dash}});
+    ann.push({x:0,y:z.price,xanchor:'left',yanchor:'bottom',text:z.label,showarrow:false,font:{size:10,color:col},bgcolor:rgba('#0d1117',.75)});
+    tip(xe2-2,z.price,`${z.label} @ ${price(z.price)}`,`Zona ${price(z.lo)}–${price(z.hi)} · kekuatan ${Math.round(z.strength*100)}% (sentuhan ×TF, recency, rejection wick) · jarak ${z.dist_atr} ATR H1`,col); });
+  if(L.refs) ((D.sr_mtf||{}).refs||[]).forEach(r=>{
+    shapes.push({type:'line',x0:0,x1:xe2,y0:r.price,y1:r.price,line:{color:rgba(C.gray,.55),width:1,dash:'dot'}});
+    ann.push({x:xe2,y:r.price,xanchor:'right',yanchor:'bottom',text:r.label,showarrow:false,font:{size:9,color:C.gray}}); });
+  if(L.news) (D.news||[]).forEach(e=>{ const x=xOf(e.t); if(x<0) return; const col=e.tier==='High'?C.err:e.tier==='Medium'?C.gold:C.gray;
+    shapes.push({type:'line',x0:x,x1:x,y0:nlo,y1:nhi,line:{color:rgba(col,.7),width:1.2,dash:'dot'}});
+    ann.push({x,y:nhi,yanchor:'bottom',text:e.icon,showarrow:false,font:{size:12,color:col},bgcolor:rgba('#0d1117',.8)});
+    const rea=e.reaction?`Reaksi terukur (ATR): +5m ${e.reaction['+5']??'–'} · +15m ${e.reaction['+15']??'–'} · +60m ${e.reaction['+60']??'–'}`
+      :e.t>Date.now()/1000?`Mulai dalam ${Math.round((e.t-Date.now()/1000)/60)} menit`:'reaksi belum tersedia';
+    tip(x,hi,`${e.icon} ${e.title}`,`${e.source} · ${tlabel(e.t)} · tier ${e.tier} · terdampak ${e.affected.join(', ')||'-'} · ${rea}`,col); });
+  // AKTIF (posisi nyata) sudah tergambar ringkas lewat layer 'trades' (agregat) -> di sini hanya
+  // kandidat (MENUNGGU/DITOLAK), satu per simbol by design (cand_plans di-overwrite tiap scan)
+  if(L.entryline) (D.plans||[]).filter(p=>p.status==='MENUNGGU'||(p.status==='DITOLAK'&&L.rejected)).forEach(p=>{
+    const buy=p.dir==='BUY', rej=p.status==='DITOLAK', col=rej?C.gray:(buy?C.up:C.down), x0=Math.max(0,xOf(p.t));
+    shapes.push({type:'line',x0,x1:xe2,y0:p.entry,y1:p.entry,line:{color:col,width:(rej?1.5:2)+(LV_HL===p.symbol?2:0),dash:p.status==='MENUNGGU'?'dash':rej?'dot':'solid'}});
+    ann.push({x:xe2,y:p.entry,xanchor:'left',text:`${rej?'✕':buy?'▲':'▼'} ENTRY ${p.dir} ${price(p.entry)}${rej?' (ditolak)':''}`,showarrow:false,
+      font:{size:11,color:rej?'#fff':'#fff'},bgcolor:rgba(col,rej?.6:.85)});
+    tip(x0,p.entry,`Titik entry ${p.status} ${p.dir}`,`@ ${price(p.entry)}${p.trigger_text?' · '+p.trigger_text:''}${rej?' · '+p.reason:''}`,col); });
+  if(L.plan) (D.plans||[]).filter(p=>p.status==='MENUNGGU'||(p.status==='DITOLAK'&&L.rejected)).forEach(p=>{
+    const buy=p.dir==='BUY', rej=p.status==='DITOLAK', done=p.status==='SELESAI', col=rej||done?C.gray:(buy?C.up:C.down);
+    const x0=Math.max(0,xOf(p.t)), dash=p.status==='MENUNGGU'?'dash':rej||done?'dot':'solid', op=done?.35:rej?.5:1, sl=p.sl_now||p.sl;
+    if(!rej){ shapes.push({type:'rect',x0,x1:xe2,y0:p.entry,y1:sl,fillcolor:rgba(C.down,.10*op),line:{width:0}});
+              shapes.push({type:'rect',x0,x1:xe2,y0:p.entry,y1:p.tp2,fillcolor:rgba(C.up,.08*op),line:{width:0}}); }
+    [['ENTRY',p.entry,col],['SL',sl,C.down],['TP1',p.tp1,C.up],['TP2',p.tp2,C.up],['INVALID',p.invalid,C.gray]].forEach(([k,v,c])=>{
+      shapes.push({type:'line',x0,x1:xe2,y0:v,y1:v,line:{color:rgba(rej?C.gray:c,op*(k==='INVALID'?.6:.95)),width:k==='ENTRY'&&p.status==='AKTIF'?2:1,dash}}); });
+    const rr=k=>k==='TP1'?` (${p.tp1_atr} ATR, 1:${p.rr1})`:k==='TP2'?` (${p.tp2_atr} ATR, 1:${p.rr2})`:k==='SL'?` (${p.sl_atr} ATR)`:'';
+    ['SL','TP1','TP2'].forEach(k=>ann.push({x:xe2,y:k==='SL'?sl:p[k.toLowerCase()],xanchor:'left',text:`${k} ${price(k==='SL'?sl:p[k.toLowerCase()])}${rr(k)}`,
+      showarrow:false,font:{size:10,color:rej?C.gray:k==='SL'?C.down:C.up},bgcolor:rgba('#0d1117',.8)}));
+    ann.push({x:x0,y:p.entry,xanchor:'left',yanchor:buy?'bottom':'top',text:`${p.status} ${p.dir}${rej?' — '+p.reason.slice(0,50):''}`,
+      showarrow:false,font:{size:10,color:rej?C.gray:'#fff'},bgcolor:rgba(rej?'#262c34':(buy?C.up:C.down),rej?.9:.4)});
+    const sk=Object.entries(p.skill_scores||{}).map(([k,v])=>`${k} ${v==null?'–':(v>0?'+':'')+v.toFixed(2)}`).join(' · ');
+    tip(x0,p.entry,`Rencana ${p.status} ${p.dir} @ ${price(p.entry)}`,`${p.trigger_text||''} SL ${price(sl)} · TP1 ${price(p.tp1)} (1:${p.rr1}) · TP2 ${price(p.tp2)} (1:${p.rr2}) · invalidasi ${price(p.invalid)} · skor keyakinan ${p.score==null?'–':p.score+'%'}${sk?' · konfluensi: '+sk:''}${p.reason?' · '+p.reason:''}. Label bukan janji arah harga.`,col); });
+  if(L.entry){ const E=D.entries.map(e=>({...e,x:xOf(e.t_entry)})).filter(e=>e.x>=0);
+    if(E.length) traces.push({type:'scatter',mode:'markers',x:E.map(e=>e.x),y:E.map(e=>e.price),
+      marker:{symbol:'triangle-right',size:14,color:E.map(e=>e.dir==='BUY'?C.up:C.down),line:{color:'#fff',width:1.5}},
+      hovertext:E.map(e=>`<b>ENTRY ${e.dir} ×${e.tickets}</b> @ ${price(e.price)}<br>skor ${e.confidence==null?'–':Math.round(e.confidence*100)+'%'}<br>${(e.smc||[]).slice(0,2).join('<br>')}<br><i>klik untuk detail</i>`),
+      hoverinfo:'text',showlegend:false,customdata:E.map(e=>JSON.stringify({entry:e}))}); }
+  if(!VIEW.labels) traces.forEach(t=>{ if(t.mode==='markers+text') t.mode='markers'; });
+  const step=Math.max(1,Math.round(n/8)), tv=X.filter(i=>i%step===0), view=xview||[Math.max(0,n-150),n+8];
+  Plotly.react('chart',styleHover(traces),{paper_bgcolor:C.panel,plot_bgcolor:C.panel,font:{color:C.text,size:11,family:'Segoe UI'},margin:{l:10,r:74,t:10,b:30},
+    xaxis:{rangeslider:{visible:false},tickvals:tv,ticktext:tv.map(i=>tlabel(D.candles.t[i])),gridcolor:C.line,range:view},
+    yaxis:{side:'right',gridcolor:C.line,autorange:false,range:yRange(...view),tickformat:',.2f'},shapes,annotations:VIEW.labels?ann:ann.filter(a=>/^(SL|TP) /.test(a.text)),hovermode:'closest',dragmode:'pan',
+    uirevision:uirev,hoverlabel:HL,modebar:{bgcolor:'rgba(0,0,0,0)',color:C.muted,activecolor:C.text}},{responsive:true,scrollZoom:true,displaylogo:false});
+  const b=M.bias>0?'<span class="pos">NAIK</span>':M.bias<0?'<span class="neg">TURUN</span>':'netral';
+  $('#chartnote').innerHTML = `${D.symbol} · chart ${D.tf} · bias struktur SMC ${b} · candle berjalan tidak dianalisis · scroll = zoom, geser = pan`;
+  const el=$('#chart');
+  if(!el._bound){ el._bound=true;
+    el.on('plotly_relayout',ev=>{ if(ev['xaxis.range[0]']!=null){ xview=[ev['xaxis.range[0]'],ev['xaxis.range[1]']]; Plotly.relayout('chart',{'yaxis.range':yRange(...xview)}); }
+      else if(ev['xaxis.autorange']){ xview=null; drawChart(); } });
+    el.on('plotly_click',ev=>{ const cd=ev.points[0].customdata; if(!cd) return; const o=JSON.parse(cd); o.entry?showEntry(o.entry):showInfo(o); }); }
+}
+function showInfo(o){ $('#info').innerHTML=`<h3>Info pola</h3><div style="font-weight:700">${o.t}</div>${o.time?`<div class="mut">${tlabel(o.time)}</div>`:''}<div style="margin-top:4px">${o.d}</div>`; }
+
+// ================================================================== log sinyal & alasan entry
+function entryHtml(e){
+  const conf=e.confidence==null?null:Math.round(e.confidence*100), col=conf==null?C.gray:conf>=55?C.ok:conf>=45?C.warn:C.err;
+  const li=a=>a&&a.length?'<ul>'+a.map(x=>`<li>${x}</li>`).join('')+'</ul>':'<div class="mut">–</div>';
+  return `<div style="display:flex;justify-content:space-between;gap:6px;font-weight:700">${dirTag(e.dir)} <span>${e.symbol} ×${e.tickets}</span><span class="mut num" style="font-weight:400">${new Date(e.time).toLocaleString('id-ID')}</span></div>
+   <div class="mut num" style="margin-top:3px">@ ${price(e.price)} · ${e.risk} · sesi ${e.session}${e.mode && e.mode.toLowerCase() !== 'demo' ? ' · ' + e.mode : ''}</div>
+   ${e.score!=null?`<div class="sub">Skor gabungan (dibandingkan dgn min profil ${e.profile||''})</div><div class="num">${e.score}%</div>
+   <div class="bar"><i style="width:${e.score}%;background:${e.score>=50?C.ok:e.score>=35?C.warn:C.err}"></i></div>
+   <div class="cand">${Object.entries(e.skill_scores||{}).map(([k,v])=>`${k} <b class="${v>0?'pos':v<0?'neg':''}">${v==null?'–':(v>0?'+':'')+v.toFixed(2)}</b>`).join(' · ')}</div>`:''}
+   <div class="sub">Peluang menang model belajar (learning: ${e.learning_mode}) — BUKAN skor gerbang</div><div class="num">${conf==null?'belum ada model':conf+'%'}</div>
+   <div class="bar"><i style="width:${conf||0}%;background:${col}"></i></div>
+   ${e.factors&&e.factors.length?'<ul>'+e.factors.map(f=>`<li>${f[0]} <span class="num ${f[1]>0?'pos':'neg'}">${f[1]>0?'+':''}${f[1]}</span></li>`).join('')+'</ul>':''}
+   <div class="sub">Sinyal utama</div>${li(e.signal)}<div class="sub">Pola candlestick (3 bar terakhir)</div>${li(e.candles)}
+   <div class="sub">SMC (filter: ${e.smc_mode})</div>${li(e.smc)}<div class="sub">Struktur & chart pattern</div>${li(e.chart)}
+   ${e.notes&&e.notes.length?'<div class="sub">Catatan</div>'+li(e.notes):''}`;
+}
+function showEntry(e){ $('#info').innerHTML='<h3>Kenapa bot entry di sini?</h3>'+entryHtml(e); }
+async function loadSignals(){
+  const E = await j('/api/entries?n=20'+(SYMF?'&symbol='+encodeURIComponent(SYMF):'')); lastEntries = E; $('#sigcount').textContent = E.length || '';
+  $('#siglog').innerHTML = E.length ? `<table><thead><tr><th class="l">Waktu</th><th class="l">Simbol</th><th class="l">Arah</th><th>Tiket</th><th>Harga</th><th>Skor</th><th class="l">Pemicu</th></tr></thead><tbody>`+
+    E.map((e,i)=>`<tr class="click" data-i="${i}"><td class="l">${new Date(e.time).toLocaleString('id-ID',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'})}</td>
+      <td class="l t">${e.symbol}</td><td class="l">${dirTag(e.dir)}</td><td>${e.tickets}</td><td>${price(e.price)}</td>
+      <td>${e.confidence==null?'–':Math.round(e.confidence*100)+'%'}</td><td class="l t mut trig" title="${String((e.signal||[])[0]||'').replace(/"/g,'&quot;')}">${(e.signal||[])[0]||''}</td></tr>`).join('')+'</tbody></table>'
+    : '<div class="mut">Belum ada entry. Setiap kali bot membuka posisi, baris baru muncul di sini.</div>';
+  document.querySelectorAll('#siglog tr.click').forEach(r=>r.onclick=()=>showEntry(lastEntries[+r.dataset.i]));
+}
+async function loadMT5(){
+  const R=await j('/api/mt5');
+  if(R.error){ $('#mt5kv').innerHTML='<span class="c-err">'+R.error+'</span>'; return; }
+  const a=R.account;
+  const srv = (a.server || '').replace(/[-_]?demo\d*/gi, '');
+  const typeStr = (a.type && a.type.toUpperCase() !== 'DEMO') ? ` · ${a.type}` : '';
+  $('#mt5acc').textContent=`#${a.login}${srv ? ' · ' + srv : ''}${typeStr} · ${a.currency} · 1:${a.leverage}`;
+  $('#mt5kv').innerHTML=`<span>Balance</span><b>${money(a.balance)}</b><span>Equity</span><b>${money(a.equity)}</b>
+    <span>Floating</span><b>${sgn(a.profit)}</b><span>Margin</span><b>${money(a.margin)}</b>
+    <span>Free margin</span><b>${money(a.margin_free)}</b><span>Margin level</span><b>${a.margin?pct(a.margin_level,0):'–'}</b>`;
+  $('#mt5sync').innerHTML=`<span class="${R.sync.ok===true?'c-ok':R.sync.ok===false?'c-err':'mut'}">${R.sync.ok===true?'✔ ':R.sync.ok===false?'✖ ':''}${R.sync.text}</span>`;
+  const P=R.positions; $('#mt5count').textContent = P.length || '';
+  $('#mt5pos').innerHTML=P.length?`<table><thead><tr><th class="l">Pemilik</th><th class="l">Simbol</th><th class="l">Arah</th><th>Lot</th><th>Entry</th><th>SL</th><th>P/L</th></tr></thead><tbody>`+
+    P.map(p=>`<tr><td class="l"><span class="tag ${p.magic===R.bot_magic?'me':''}">${p.owner}</span></td><td class="l t">${p.symbol}</td><td class="l">${dirTag(p.dir)}</td>
+      <td>${lot(p.volume)}</td><td>${price(p.open)}</td><td>${price(p.sl)}</td><td>${sgn(p.profit)}</td></tr>`).join('')+'</tbody></table>':'<div class="mut">Tidak ada posisi di MT5.</div>';
+  const T=Object.entries(R.today);
+  $('#mt5today').innerHTML=T.length?`<table><thead><tr><th class="l">Pemilik</th><th>Trade</th><th>WR</th><th>P/L</th></tr></thead><tbody>`+
+    T.map(([k,v])=>`<tr><td class="l t">${k}</td><td>${v.trades}</td><td>${pct(v.wins/v.trades*100,0)}</td><td>${sgn(v.pnl)}</td></tr>`).join('')+'</tbody></table>'
+    :'<div class="mut">Belum ada posisi tertutup hari ini.</div>';
+}
+async function loadBursts(){
+  const R=(await j('/api/bursts?n=200')).filter(r=>!SYMF||r.symbol===SYMF).slice(0,30);
+  $('#burstlog').innerHTML=R.length?`<table><thead><tr><th class="l">Waktu (UTC)</th><th class="l">Simbol</th><th>#</th><th class="l">Arah</th><th>Harga</th><th title="jeda dari candle sinyal tertutup">Latensi</th></tr></thead><tbody>`+
+    R.map(r=>`<tr><td class="l">${r.time_utc_ms.replace('T',' ').slice(5,23)}</td><td class="l t">${r.symbol}</td><td>${r.ticket_no}/${r.burst_size}</td>
+      <td class="l">${dirTag(r.dir)}</td><td>${price(+r.price)}</td><td>${nf(r.ms_since_bar_close/1000,1)} s</td></tr>`).join('')+'</tbody></table>'
+    :'<div class="mut">Belum ada tiket burst.</div>';
+}
+// ================================================================== Saran Level Trading (state.levels dari bot — sumber tunggal)
+const LV_SYMS=['XAUUSD','XAUUSDc','BTCUSD','ETHUSD'];
+let LV_247=store.get('lv247',false); const LV_FOLD=store.get('lvfold',{}), LV_TAB={}, LV_SIG={}; let LV_T=0, LV_HTML='', LV_HL=null;
+function lvCopy(t,btn){ const done=()=>{ const o=btn.textContent; btn.textContent='Tersalin ✓'; setTimeout(()=>btn.textContent=o,1200); };
+  if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(t).then(done,()=>{}); else { const a=document.createElement('textarea'); a.value=t; document.body.appendChild(a); a.select(); try{document.execCommand('copy');done();}catch(e){} a.remove(); } }
+function lvScen(c,sc,cur){
+  const sg=[sc.entry,sc.sl,sc.tp1,sc.tp2].join('|'), pk=c.symbol+sc.dir, fl=LV_SIG[pk]&&LV_SIG[pk]!==sg?' flash':''; LV_SIG[pk]=sg;
+  const d=x=>`${nf(x.pts,x.pts<10?2:1)} poin · ${nf(x.pct,2)}% · ${nf(x.atr,2)}×ATR`;
+  const prov=sc.kind==='menunggu'&&/candle berjalan/.test(sc.reason||'');
+  const kindTxt={aktif:'SETUP AKTIF',menunggu:'MENUNGGU KONFIRMASI',tertahan:'TERTAHAN',bersyarat:'SKENARIO PANTAUAN'}[sc.kind];
+  const rr=(v,ok)=>`1:${nf(v,2)} <span class="${ok?'pos':'neg'}">${ok?'✓':'✗'} min ${nf(sc.rr_ref,1)}</span>`;
+  const zone=sc.entry_lo===sc.entry_hi?price(sc.entry):price(sc.entry_lo)+' – '+price(sc.entry_hi);
+  const cur_=(state&&state.account&&state.account.currency)||'';
+  const sk=Object.entries(sc.skills||{}).map(([k,v])=>`${k} <b class="${v>0?'pos':v<0?'neg':''}">${v==null?'–':(v>0?'+':'')+nf(v,2)}</b>`).join(' · ');
+  const copy=`${c.symbol} ${sc.dir} entry ${sc.entry} SL ${sc.sl} TP1 ${sc.tp1} TP2 ${sc.tp2}`;
+  return `<div class="lvsc ${sc.dir} ${sc.role==='utama'?'':'alt'} ${cur===sc.dir?'on':''}${fl}" data-d="${sc.dir}">
+    <div class="dh">${sc.dir==='BUY'?'▲':'▼'} ${sc.dir} · ${sc.role} <span class="${prov?'prov':'conf'}">${prov?'PROVISIONAL':'TERKONFIRMASI'}</span></div>
+    <div><b>${kindTxt}</b>${sc.kind==='aktif'?' — akan dieksekusi otomatis':''}</div>
+    ${sc.kind==='tertahan'?`<div class="why">Tertahan: ${sc.reason}<br>Perkiraan berubah: ${c.eta||'–'}</div>`:sc.kind==='bersyarat'?`<div class="why">skenario bersyarat, belum ada sinyal</div>`:''}
+    <div><span class="k">Zona entry</span> <span class="n">${zone}</span> · <span class="k">optimal</span> <span class="n">${price(sc.entry)}</span></div>
+    <div><span class="k">SL</span> <b class="n neg">${price(sc.sl)}</b> <span class="src">${d(sc.sl_d)} · ${sc.sl_src}</span></div>
+    <div><span class="k">TP1</span> <b class="n pos">${price(sc.tp1)}</b> <span class="src">${d(sc.tp1_d)} · ${sc.tp1_src}</span><br><span class="k">R:R</span> ${rr(sc.rr1,sc.rr1_ok)}</div>
+    <div><span class="k">TP2</span> <b class="n pos">${price(sc.tp2)}</b> <span class="src">${d(sc.tp2_d)} · ${sc.tp2_src}</span><br><span class="k">R:R</span> ${rr(sc.rr2,sc.rr2_ok)}</div>
+    <div><span class="k">Risiko</span> <span class="n">${sc.risk_money!=null?cur_+' '+nf(sc.risk_money,0)+' ('+nf(sc.risk_pct,2)+'% equity)':'–'}</span> · <span class="k">lot</span> <span class="n">${sc.lot!=null?lot(sc.lot)+(sc.n_orders>1?' ×'+sc.n_orders:''):'–'}</span></div>
+    <div><span class="k">Pemicu</span> ${sc.trigger}</div>
+    <div><span class="k">Invalidasi</span> <span class="n">${price(sc.invalid)}</span> <span class="src">${sc.inv_src}</span> · <span class="k">valid</span> ${sc.valid_bars!=null?sc.valid_bars+' bar':'selama posisi berjalan'}</div>
+    <div><span class="k">Konfluensi</span> ${sc.score!=null?'<b>'+sc.score+'%</b>':'–'} ${sk?'· '+sk:''}</div>
+    <button class="cp" data-copy="${copy}">Salin level</button></div>`;
+}
+function lvCard(sym){
+  const c=(state.levels||{})[sym], open=!LV_FOLD[sym], sel=SYM===sym?' sel':'';
+  if(!c) return `<div class="lvcard${sel}" data-s="${sym}"><div class="lvhd"><b class="sy">${sym}</b><span class="lvst NA">MENUNGGU DATA BOT</span></div><div class="lvna">Bot belum mengirim data level (restart bot untuk memuat versi terbaru).</div></div>`;
+  if(c.status_code==='NA'||c.status_code==='OFF') return `<div class="lvcard${sel}" data-s="${sym}"><div class="lvhd"><b class="sy">${sym}</b><span class="lvst ${c.status_code}">${c.status_code==='NA'?'TIDAK TERSEDIA':'OFF'}</span></div>
+    <div class="lvna">${c.status}${c.status_code==='NA'?'<br><span class="mut">Kartu aktif otomatis begitu symbol muncul di akun.</span>':''}</div></div>`;
+  const now=Date.now()/1000, stale=(now-c.updated>2*c.tf_sec)||!(state.connection&&state.connection.ok)||(now-state.ts>20);
+  const main=Object.values(c.scen).find(x=>x.role==='utama'), cur=LV_TAB[sym]||(main&&main.dir)||'BUY';
+  const live=(state.positions||[]).filter(p=>p.symbol===sym), lp=(c.live||c.price);
+  const scs=['BUY','SELL'].map(k=>c.scen[k]&&lvScen(c,c.scen[k],cur)).join('');
+  const livehtml=live.map(p=>{ const dsl=p.sl?Math.abs(lp-p.sl):null;
+    return `<div class="lvlive"><b>Posisi berjalan ${dirTag(p.dir)}</b> ${lot(p.volume)} lot · entry <span class="n">${price(p.open)}</span> · SL <span class="n neg">${p.sl?price(p.sl):'–'}</span> · TP ${p.tp?'<span class="n pos">'+price(p.tp)+'</span>':'<span class="mut">trailing</span>'} · P/L ${sgn(p.profit)} · jarak ke SL ${dsl!=null?nf(dsl,2):'–'}<br>
+      SL terpasang: <b class="${p.sl_ok?'pos':'neg'}">${p.sl_ok?'ya':'TIDAK'}</b> · TP terpasang: <b class="${p.tp_ok?'pos':p.tp_required?'neg':'mut'}">${p.tp_ok?'ya':'tidak'+(p.tp_required?'':' (by design: exit SL+trailing)')}</b>
+      ${p.sltp_warn?' <span class="bad">PERINGATAN: level tidak lengkap di MT5</span>':''}</div>`; }).join('');
+  return `<div class="lvcard${open?'':' collapsed'}${stale?' stale':''}${sel}" data-s="${sym}">
+    <div class="lvhd"><b class="sy">${sym}</b><span class="px">${price(lp)}</span><span class="lvst ${c.status_code}">${c.status}</span>
+      <span class="meta">${c.tf} · upd ${hm(Math.floor(c.updated))}</span></div>
+    <div class="lvbody"><div class="lvtabs"><button data-t="BUY" class="${cur==='BUY'?'on':''}">▲ BUY</button><button data-t="SELL" class="${cur==='SELL'?'on':''}">▼ SELL</button></div>
+      <div class="lvcols">${scs}</div>${livehtml}</div>${stale?'<div class="lvstale">DATA BASI</div>':''}</div>`;
+}
+function renderLevels(force){
+  if(!state||!$('#lvbox')) return; const t=Date.now(); if(!force&&t-LV_T<1000) return; LV_T=t;
+  const syms=LV_SYMS.concat(LV_247?['XAUUSD247']:[]);
+  const h=syms.map(lvCard).join(''); if(h===LV_HTML) return; LV_HTML=h; $('#lvbox').innerHTML=h; $('#lvupd').textContent=new Date().toLocaleTimeString('id-ID');
+  document.querySelectorAll('#lvbox .lvhd').forEach(e=>e.onclick=()=>{ const sy=e.parentElement.dataset.s; const was=SYM===sy; LV_FOLD[sy]=was?!LV_FOLD[sy]:false; store.set('lvfold',LV_FOLD);
+    LV_HL=sy; if(!was){ SYM=sy; store.set('sym',SYM); renderTabs(); resetView(); } renderLevels(true); });
+  document.querySelectorAll('#lvbox .lvtabs button').forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); LV_TAB[b.closest('.lvcard').dataset.s]=b.dataset.t; renderLevels(true); });
+  document.querySelectorAll('#lvbox button.cp').forEach(b=>b.onclick=()=>lvCopy(b.dataset.copy,b));
+}
+$('#lv247').checked=LV_247; $('#lv247').onchange=e=>{ LV_247=e.target.checked; store.set('lv247',LV_247); renderLevels(true); };
+// ================================================================== berita 24 jam
+async function loadNews(){
+  const R = await j('/api/news?symbol='+SYM); $('#newssym').textContent = SYM;
+  const now = Date.now()/1000, ev = R.events||[];
+  const row = e => `<div class="nrow"><span class="nic t-${e.tier}">${e.icon}</span><div><b>${e.title}</b> <span class="mut">${e.source} · ${tlabel(e.t)} · ${e.tier}</span>
+     <div class="cand">${e.t>now?`⏳ ${Math.round((e.t-now)/60)} menit lagi`:e.reaction?`reaksi ATR +5m ${e.reaction['+5']??'–'} / +15m ${e.reaction['+15']??'–'} / +60m ${e.reaction['+60']??'–'}`:'reaksi menunggu data'}
+     ${e.forecast||e.previous?` · F ${e.forecast||'–'} P ${e.previous||'–'}${e.actual?' A '+e.actual:''}`:''}</div></div></div>`;
+  const S = Object.entries(R.stats||{}).map(([k,v])=>`<tr><td class="l t">${k}</td><td>${v.n}</td>${['+5','+15','+60'].map(m=>v[m]?`<td>${nf(v[m].mean_abs,2)} <span class="mut">${v[m].up_pct}%↑</span></td>`:'<td>–</td>').join('')}<td class="l t ${v.sampel_sedikit?'c-warn':'mut'}">${v.sampel_sedikit?'sampel sedikit':'ok'}</td></tr>`).join('');
+  $('#newsbox').innerHTML = (R.blackout&&R.blackout[0]?`<div class="alert al-warn">Blackout aktif: ${R.blackout[1]}</div>`:'')+
+    (ev.length?ev.map(row).join(''):'<div class="mut">Tidak ada event relevan ±24 jam.</div>')+
+    (S?`<div class="sub">Reaksi historis (rata-rata |gerak| ATR, % naik)</div><div class="tbl"><table><thead><tr><th class="l">Jenis</th><th>n</th><th>+5m</th><th>+15m</th><th>+60m</th><th class="l"></th></tr></thead><tbody>${S}</tbody></table></div>`:'')+
+    `<div class="cand">Sumber: kalender FairEconomy · RSS ${Object.keys((R.sources||{}).rss||{}).join(', ')}${Object.keys((R.sources||{}).rss_error||{}).length?' · <span class="c-err">gagal: '+Object.keys(R.sources.rss_error).join(', ')+' (pakai cache)</span>':''} · arah tidak ditebak dari headline</div>`;
+}
+// ================================================================== histori 2 tahun (cache lokal, windowed + resampling)
+let HIST=false, histT0=null;
+async function loadDataInfo(){ const S=await j('/api/datastatus'); const d=(S.detail||{})[`${SYM}_${TF}`];
+  $('#datainfo').textContent = d&&d.first ? `Data: ${new Date(d.first*1000).toLocaleDateString('id-ID')} → sekarang, sumber MT5 · ${nf(d.bars,0)} bar ${TF} · ${S.state}` : `cache ${S.state}`; }
+async function histLoad(t0,t1){
+  const W = await j(`/api/bars?symbol=${SYM}&tf=${TF}&max=2000${t0?'&t0='+Math.floor(t0):''}${t1?'&t1='+Math.floor(t1):''}`);
+  if(!W.t.length) return;
+  const x=W.t.map(t=>new Date(t*1000));
+  Plotly.react('chart',[{type:'candlestick',x,open:W.o,high:W.h,low:W.l,close:W.c,increasing:{line:{color:C.up}},decreasing:{line:{color:C.down}},showlegend:false,hoverlabel:HL}],
+    {paper_bgcolor:C.panel,plot_bgcolor:C.panel,font:{color:C.text,size:11},margin:{l:10,r:74,t:10,b:30},hoverlabel:HL,dragmode:'pan',
+     xaxis:{rangeslider:{visible:false},gridcolor:C.line,type:'date',range:t0?[x[0],x[x.length-1]]:undefined},yaxis:{side:'right',gridcolor:C.line,autorange:true,fixedrange:false},
+     modebar:{bgcolor:'rgba(0,0,0,0)',color:C.muted,activecolor:C.text}},{responsive:true,scrollZoom:true,displaylogo:false});
+  histT0 = W.t[0];
+  $('#chartnote').textContent = `${SYM} histori ${TF}${W.k>1?' · diringkas '+W.k+' bar/candle (zoom-in untuk detail)':''} · ${W.t.length} candle ditampilkan dari ${nf(W.bars,0)} di cache · overlay analisis hanya di mode live`;
+  const el=$('#chart'); if(!el._histBound){ el._histBound=true; let tmr;
+    el.on('plotly_relayout',ev=>{ if(!HIST||ev['xaxis.range[0]']==null) return; clearTimeout(tmr);
+      tmr=setTimeout(()=>histLoad(new Date(ev['xaxis.range[0]']).getTime()/1000,new Date(ev['xaxis.range[1]']).getTime()/1000),250); }); }
+}
+$('#histBtn').onclick=()=>{ HIST=!HIST; $('#histBtn').classList.toggle('on',HIST); $('#moreBtn').hidden=!HIST;
+  Plotly.purge('chart'); $('#chart')._bound=false; $('#chart')._histBound=false; HIST?histLoad(Date.now()/1000-90*86400):resetView(); };
+$('#moreBtn').onclick=()=>histLoad((histT0||Date.now()/1000)-180*86400);
+// ================================================================== candle berjalan via SSE (histori dimuat sekali)
+let ES=null;
+function startStream(){ if(ES) ES.close(); ES=new EventSource(`/api/stream?symbol=${SYM}&tf=${TF}`);
+  ES.onmessage=ev=>{ if(HIST||!chartData) return; const b=JSON.parse(ev.data), C_=chartData.candles, i=C_.t.length-1;
+    if(b.t===C_.t[i]){ C_.o[i]=b.o; C_.h[i]=b.h; C_.l[i]=b.l; C_.c[i]=b.c;
+      Plotly.restyle('chart',{open:[C_.o],high:[C_.h],low:[C_.l],close:[C_.c]},[0]); }
+    else if(b.t>C_.t[i]) loadChart(); }; }
+// benchmark render Plotly (dipakai untuk laporan P6)
+window.benchChart = async n => { const d=document.createElement('div'); d.style.cssText='width:1200px;height:500px;position:absolute;left:-9999px'; document.body.appendChild(d);
+  const t=[...Array(n).keys()], o=t.map(i=>100+Math.sin(i/50)*5), c=o.map(v=>v+Math.random()-.5);
+  const t0=performance.now(); await Plotly.newPlot(d,[{type:'candlestick',x:t,open:o,high:c.map((v,i)=>Math.max(v,o[i])+.3),low:c.map((v,i)=>Math.min(v,o[i])-.3),close:c}],{xaxis:{rangeslider:{visible:false}}});
+  const t1=performance.now(); await Plotly.relayout(d,{'xaxis.range':[n*.4,n*.6]}); const t2=performance.now(); Plotly.purge(d); d.remove();
+  return {n, render_ms:Math.round(t1-t0), zoom_ms:Math.round(t2-t1)}; };
+
+// ================================================================== profil & skill (perintah -> bot -> ACK)
+const PROFS = ['CONSERVATIVE','NORMAL','AGGRESSIVE'];
+let PEND = null;                           // perintah yang menunggu ACK: {what, label}
+function profStat(cls, txt){ const e=$('#profstat'); e.className='profstat '+cls; e.textContent=txt; }
+async function sendCmd(body, what, label){
+  if(PEND){ alert('Masih menunggu konfirmasi perintah sebelumnya.'); return false; }
+  PEND = {what, label}; renderControl(); profStat('wait', `⏳ MENUNGGU KONFIRMASI: ${label}`);
+  let r; try{ r = await j('/api/control',{method:'POST',body:JSON.stringify(body)}); }catch(e){ r={ok:false,error:'dashboard tidak bisa menghubungi server'}; }
+  const fail = msg => { PEND=null; profStat('err', `✖ ${label} GAGAL — ${msg}. Tampilan dikembalikan.`); renderControl(); loadAudit(); return false; };
+  if(!r.ok) return fail(r.error||'ditolak');
+  const t0 = Date.now();
+  while(Date.now()-t0 < 5000){                      // batas waktu ACK 5 detik
+    await new Promise(res=>setTimeout(res,400));
+    const a = await j('/api/ack?id='+encodeURIComponent(r.id)).catch(()=>({pending:true}));
+    if(a.pending) continue;
+    if(!a.ok) return fail(a.msg);
+    state.control = Object.assign(state.control||{}, {profile:a.profile, skills:a.skills});
+    PEND=null; profStat('ok', `✔ AKTIF: ${label}` + (a.warnings&&a.warnings.length?' — ⚠ '+a.warnings.join(' | '):''));
+    if(a.warnings&&a.warnings.length) alert('Dikonfirmasi bot, dengan peringatan:\n\n'+a.warnings.join('\n'));
+    loadState(); loadAudit(); return true;
+  }
+  return fail('tidak ada ACK dari bot dalam 5 detik (bot/MT5 tidak merespons)');
+}
+function renderControl(){
+  const K = state && state.control; if(!K || !K.profile) { profStat('off','menunggu bot…'); return; }
+  const g = K.profile.global;
+  document.querySelectorAll('#profbtns button').forEach(b=>{ b.classList.toggle('on', !PEND && b.dataset.p===g);
+    b.classList.toggle('pend', !!PEND && PEND.what==='global' && PEND.label.endsWith(b.dataset.p)); b.disabled=!!PEND; });
+  const stratLabel = (K.active_strategy === 'bb_reversion' || K.active_strategy === 'dark_venus') ? ' · BB Reversion (Dark Venus)' : (K.active_strategy === 'smc_mtf' ? ' · SMC MTF' : '');
+  if(!PEND && !/✖|✔/.test($('#profstat').textContent)) profStat(g==='AGGRESSIVE'?'aggr':'ok', `AKTIF: ${g}${stratLabel}`);
+  // skill
+  const R = K.registry||{}, S = K.skills||{};
+  $('#skills').innerHTML = Object.entries(R).map(([id,s])=>`<div class="skill ${S[id]?'':'off'}">
+      <label class="sw"><input type="checkbox" data-skill="${id}" ${S[id]?'checked':''} ${PEND?'disabled':''}><span class="knob"></span><b>${s.name}</b></label>
+      <div class="cand">${s.desc}${s.deps&&s.deps.length?` <span class="dep">butuh: ${s.deps.map(d=>(R[d]||{}).name||d).join(', ')}</span>`:''}</div></div>`).join('');
+  document.querySelectorAll('#skills input[data-skill]').forEach(e=>e.onchange=()=>{
+    const id=e.dataset.skill, on=e.checked, s=R[id], dep=Object.entries(R).filter(([k,x])=>(x.deps||[]).includes(id)&&S[k]).map(([k,x])=>x.name);
+    const msg = on ? `Nyalakan skill "${s.name}"?` : `Matikan skill "${s.name}"?\n\n${s.warn_off?'⚠ '+s.warn_off+'\n\n':''}${dep.length?'Ikut dimatikan (bergantung): '+dep.join(', ')+'\n\n':''}Berlaku untuk entry berikutnya.`;
+    if(!confirm(msg)){ e.checked=!on; return; }
+    sendCmd({action:'skill', skill:id, on}, 'skill', `skill ${s.name} ${on?'ON':'OFF'}`); });
+  // profil per simbol
+  const E = K.effective||{}, P = K.profile.per_symbol||{};
+  if(!(document.activeElement && document.activeElement.classList.contains('psel'))) $('#profsym').innerHTML = `<table><thead><tr><th class="l">Simbol</th><th class="l">Profil</th><th>Risk</th><th>Burst</th><th>Slot</th><th>Skor min</th><th>Cooldown</th></tr></thead><tbody>`+
+    Object.entries(E).map(([s,e])=>`<tr><td class="l t">${s}</td><td class="l"><select class="psel" data-sym="${s}" ${PEND?'disabled':''}>
+      <option value="">global (${g})</option>${PROFS.map(p=>`<option ${P[s]===p?'selected':''}>${p}</option>`).join('')}</select></td>
+      <td>${pct(e.risk_pct)}</td><td>${e.burst}×${e.bursts_per_symbol}</td><td>${e.group_slots}</td><td>${e.min_score}%</td><td>${e.cooldown_min}m${e.intrabar?' ⚡':''}</td></tr>`).join('')+'</tbody></table>'+
+    `<div class="cand">⚡ = boleh entry di candle berjalan · SMC ${Object.values(E).some(e=>e.smc==='strict')?'wajib (strict) di profil CONSERVATIVE':'pemberat skor'} · risk manager akun: terbuka ${nf(K.open_risk_account_pct||0,2)}% / maks ${K.account_cap_pct}%</div>`;
+  document.querySelectorAll('#profsym select').forEach(e=>e.onchange=()=>{ const s=e.dataset.sym, p=e.value;
+    if(p==='AGGRESSIVE' && !confirm(`Yakin ganti ${s} ke AGGRESSIVE?`)){ renderControl(); return; }
+    sendCmd({action:'profile', profile:p||'DEFAULT', symbol:s}, 'sym', `profil ${s} → ${p||'global'}`); });
+  // sinyal terdeteksi vs dieksekusi
+  const D = K.signals_today||{}; let det=0, exe=0; const why={};
+  Object.values(D).forEach(x=>{ det+=x.detected; exe+=x.executed; Object.entries(x.reasons||{}).forEach(([k,v])=>why[k]=(why[k]||0)+v); });
+  $('#sigsum').textContent = `${exe}/${det} sinyal dieksekusi hari ini`;
+  $('#sigstats').innerHTML = det ? `<div class="kv"><span>Terdeteksi</span><b>${det}</b><span>Dieksekusi</span><b class="c-ok">${exe}</b>
+      ${Object.entries(why).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span>Ditolak: ${k}</span><b class="c-warn">${v}</b>`).join('')}</div>
+      <div class="cand">${Object.entries(D).map(([p,x])=>`${p}: ${x.executed}/${x.detected}`).join(' · ')}</div>`
+    : '<div class="mut" style="font-size:12px">Belum ada sinyal hari ini (UTC).</div>';
+  $('#rejects').innerHTML = (K.rejects||[]).length ? `<table><thead><tr><th class="l">Waktu</th><th class="l">Simbol</th><th class="l">Arah</th><th class="l">Profil</th><th class="l">Kategori</th><th class="l">Alasan</th></tr></thead><tbody>`+
+    K.rejects.slice().reverse().map(x=>`<tr><td class="l">${hm(x.t)}</td><td class="l t">${x.symbol}</td><td class="l">${dirTag(x.dir)}</td><td class="l t">${x.profile}</td><td class="l t c-warn">${x.cat}</td><td class="l t trig" title="${x.reason.replace(/"/g,'&quot;')}">${x.reason}</td></tr>`).join('')+'</tbody></table>'
+    : '<div class="mut">Belum ada sinyal ditolak.</div>';
+}
+document.querySelectorAll('#profbtns button').forEach(b=>b.onclick=()=>{
+  const p=b.dataset.p, cur=state&&state.control&&state.control.profile.global; if(p===cur) return;
+  if(!confirm(p==='AGGRESSIVE'?'Yakin ganti ke AGGRESSIVE?\n\nRisk per tiket ×1,5 (maks 0,30%), slot ×2, 2 burst per simbol, skor minimum 25, entry di candle berjalan. Berlaku untuk entry berikutnya; posisi terbuka tetap parameter lama.'
+                           :`Ganti profil global ke ${p}? Berlaku untuk entry berikutnya.`)) return;
+  sendCmd({action:'profile', profile:p}, 'global', `profil global → ${p}`); });
+async function loadEval(){
+  const R = await j('/api/evaluation');
+  const tb = rows => rows.length ? `<table><thead><tr><th class="l">Kunci</th><th>Trade</th><th>WR</th><th>PF</th><th>P/L</th><th>Max DD</th><th>Rata2 durasi</th><th class="l">Sejak</th></tr></thead><tbody>`+
+    rows.map(r=>`<tr><td class="l t" style="white-space:normal"><b>${r.key}</b></td><td>${r.trades}</td><td>${pct(r.win_rate,1)}</td><td>${r.pf==null?'∞':nf(r.pf,2)}</td>
+      <td>${sgn(r.pnl)}</td><td class="neg">${money(r.max_dd)}</td><td>${nf(r.avg_min,1)} mnt</td><td class="l">${r.since}</td></tr>`).join('')+'</tbody></table>'
+    : '<div class="mut">Belum ada trade tertutup yang tercatat dengan profil (mulai terisi setelah trade berikutnya tutup).</div>';
+  $('#evalprof').innerHTML = tb(R.profile); $('#evalskill').innerHTML = tb(R.skills);
+}
+async function loadAudit(){ const A=await j('/api/audit?n=10'); $('#audit').textContent = A.length?A.join('\n'):'belum ada'; }
+async function loadLearning(){
+  const R=await j('/api/learning');
+  if(!R||!R.features){ $('#learnnote').textContent='laporan belum ada'; return; }
+  const F=R.features.filter(f=>f.weight!=null).sort((a,b)=>a.weight-b.weight);
+  if(F.length) Plotly.react('learnchart',[{type:'bar',orientation:'h',x:F.map(f=>f.weight),y:F.map(f=>f.name),marker:{color:F.map(f=>f.weight>0?C.up:C.down)},
+    customdata:F.map(f=>[f.n,f.wr,f.exp_R]),hovertemplate:'<b>%{y}</b><br>bobot %{x:.3f}<br>n %{customdata[0]} · WR %{customdata[1]}% · rata2 %{customdata[2]}R<extra></extra>'}],
+    {hoverlabel:HL,paper_bgcolor:C.panel,plot_bgcolor:C.panel,font:{color:C.text,size:10,family:'Segoe UI'},margin:{l:10,r:10,t:5,b:30},
+     xaxis:{gridcolor:C.line,zerolinecolor:C.muted,title:{text:'← menurunkan peluang menang · menaikkan →',font:{size:10}}},yaxis:{automargin:true}},{displayModeBar:false,responsive:true});
+  const v=R.validation;
+  $('#learnnote').innerHTML=`${R.n} sampel (${R.n_live} dari bot) · WR dasar ${pct(R.base_wr,1)} · mode ${R.mode}`+(v?` · gate ${v.improves?'<span class="c-ok">terbukti membantu</span>':'<span class="c-warn">belum terbukti</span>'}`:'');
+  const ord={membaik:0,memburuk:1,stabil:2,'–':3}, rows=R.features.slice().sort((a,b)=>ord[a.trend]-ord[b.trend]);
+  $('#learntable').innerHTML=`<table><thead><tr><th class="l">Sinyal / kondisi</th><th>WR mgg ini</th><th>Lalu</th><th class="l">Tren</th><th>Rata2 R</th></tr></thead><tbody>`+
+    rows.map(f=>`<tr><td class="l t" style="white-space:normal">${f.name}</td><td>${f.wr_week!=null?pct(f.wr_week,1):'–'}${f.n_week?` <span class="mut">(${f.n_week})</span>`:''}</td><td>${f.wr_prev_week!=null?pct(f.wr_prev_week,1):'–'}</td>
+      <td class="l t ${f.trend==='membaik'?'c-ok':f.trend==='memburuk'?'c-err':'mut'}">${f.trend==='membaik'?'▲ membaik':f.trend==='memburuk'?'▼ memburuk':f.trend}</td>
+      <td class="${(f.exp_R||0)>0?'pos':'neg'}">${f.exp_R!=null?nf(f.exp_R,3):'–'}</td></tr>`).join('')+'</tbody></table>';
+}
+
+// ================================================================== legenda, kontrol, lapisan
+$('#legend').innerHTML=[
+  [C.up,'Segitiga hijau di bawah candle = pola candlestick bullish; merah di atas = bearish (H=Hammer, E=Engulfing, Pin=Pin Bar, MS/ES, 3WS/3BC, Dj=Doji).'],
+  [C.pink,'Garis & titik merah muda = chart pattern (Double Top/Bottom, H&S, Segitiga, Flag); putus-putus = neckline.'],
+  [C.gray,'Titik-titik hijau/merah horizontal = support/resistance (angka = jumlah sentuhan).'],
+  [C.cyan,'Garis cyan/merah muda miring = trendline naik/turun; titik kecil = swing high/low.'],
+  [rgba(C.up,.5),'Kotak hijau/merah = Order Block; kotak tosca/oranye bergaris titik = Fair Value Gap.'],
+  [C.blue,'Garis biru = BOS (tren berlanjut); ungu titik-strip = CHoCH (tren berbalik).'],
+  [C.gold,'Garis kuning putus-putus = likuiditas (EQH/EQL); tanda × = sweep.'],
+  [C.down,'Segitiga besar + garis putus-putus merah = posisi bot & SL-nya (TP hijau bila ada); abu-abu = posisi yang baru ditutup.'],
+  ['#ffffff','Segitiga bergaris putih = alasan entry (klik untuk detail).'],
+].map(([c,t])=>`<div><i style="background:${c}"></i><span>${t}</span></div>`).join('');
+async function control(action){ const r=await j('/api/control',{method:'POST',body:JSON.stringify({action})}); if(r.state) loadState(r.state); loadAudit(); }
+// ---- switch Burst: satu tombol geser menggantikan tombol Aktifkan/Matikan (konfirmasi tetap ada)
+$('#burstSw').onchange=async ev=>{
+  const want = ev.target.checked;
+  if(want && (!state||!state.bot_running)){ alert('Bot tidak berjalan — jalankan start_bot.cmd all dulu.'); ev.target.checked=false; return; }
+  const ok = want ? confirm('Nyalakan Burst sekarang?\n\nBot langsung mengevaluasi sinyal. Entry HANYA terjadi kalau ada sinyal valid dan semua rem risiko lolos.')
+                  : confirm('Matikan Burst?\n\nTidak ada entry baru. Posisi terbuka TETAP dikelola SL & trailing (tidak ditutup paksa).');
+  if(!ok){ ev.target.checked=!want; return; }
+  $('.big-sw').classList.add('busy'); try{ await control(want?'burst_on':'burst_off'); } finally{ $('.big-sw').classList.remove('busy'); }
+};
+function syncBurstSw(B, running){
+  const manualOff = (B.reason||'').startsWith('dimatikan manual'), sw=$('#burstSw');
+  if(!$('.big-sw').classList.contains('busy')) sw.checked = !manualOff;
+  $('.big-sw').classList.toggle('on', sw.checked && running && !!B.active);
+  $('#burstSwTxt').textContent = !sw.checked ? 'Burst OFF' : running && B.active ? 'Burst ON' : 'Burst ON · tertahan';
+}
+// ---- switch News Trading Engine: Cyberpunk Pending Order Engine
+$('#newsSw').onchange = async ev => {
+  const want = ev.target.checked;
+  if(want && (!state || !state.bot_running)){
+    alert('Bot tidak berjalan — jalankan bot terlebih dahulu.');
+    ev.target.checked = false;
+    return;
+  }
+  const ok = want ? confirm('⚡ AKTIFKAN NEWS TRADING ENGINE?\n\n' +
+                           '• Engine akan memasang Pending Order (Buy/Sell Stop & Limit) 2 menit sebelum rilis berita High-Impact.\n' +
+                           '• Proteksi OCO: Begitu satu order terisi, order lawan langsung otomatis dibatalkan.\n' +
+                           '• Proteksi Expiry: Order otomatis dibatalkan jika tidak terisi 5 menit setelah rilis.\n' +
+                           '• Proteksi Spread: Otomatis dibatalkan jika spread melonjak ekstrim saat rilis.\n\n' +
+                           'Nyalakan News Trading Engine sekarang?')
+                  : confirm('Matikan News Trading Engine?\n\nBot akan kembali ke mode blackout pasif tanpa memasang pending order saat berita High-Impact.');
+  if(!ok){ ev.target.checked = !want; return; }
+  const p = $('#newsSw').parentElement;
+  p.classList.add('busy');
+  try {
+    await sendCmd({action:'skill', skill:'news_trading', on:want}, 'skill', 'News Trading Engine ' + (want ? 'ON' : 'OFF'));
+  } finally {
+    p.classList.remove('busy');
+  }
+};
+function syncNewsSw(st, running){
+  const skills = (st.control||{}).skills || {};
+  const on = !!skills.news_trading;
+  const sw = $('#newsSw');
+  if(!sw) return;
+  const p = sw.parentElement;
+  if(!p.classList.contains('busy')) sw.checked = on;
+  p.classList.toggle('on', on && running);
+  const nte = st.news_engine || {};
+  const txt = !on ? '⚡ News Engine OFF' : running ? (nte.status && nte.status.startsWith('ARMED') ? '⚡ News ARMED' : '⚡ News Engine ON') : '⚡ News Engine';
+  $('#newsSwTxt').textContent = txt;
+}
+function renderNteHud(st, running){
+  const el = $('#ntebox');
+  if(!el) return;
+  const skills = (st.control||{}).skills || {};
+  const on = !!skills.news_trading;
+  const nte = st.news_engine || {};
+  const orders = nte.active_orders || [];
+  const up = nte.upcoming;
+
+  let html = `<div class="nte-card ${on ? 'nte-active' : 'nte-off'}">
+    <div class="nte-head">
+      <div class="nte-badge">${on ? '⚡ NEWS TRADING ENGINE ACTIVE' : '⚡ NEWS ENGINE OFF'}</div>
+      <div class="nte-strat">${(nte.strategy||'smart_adaptive').toUpperCase()}</div>
+    </div>
+    <div class="nte-body">
+      <div class="nte-status">Status: <b>${nte.status || (on ? 'STANDBY' : 'NONAKTIF')}</b></div>`;
+
+  if(up){
+    html += `<div class="nte-next">Berita Terdekat: <b class="t-${up.tier}">${up.title}</b> (${up.time_utc} UTC)</div>`;
+  }
+
+  if(orders.length > 0){
+    html += `<div class="nte-orders"><div class="nte-order-title">Pending Orders Aktif (${orders.length}):</div>`;
+    orders.forEach(o => {
+      html += `<div class="nte-order-item ${o.type.includes('BUY')?'nte-buy':'nte-sell'}">
+        <span><b>${o.type}</b> #${o.ticket} @ ${o.price}</span>
+        <span>SL ${o.sl} | TP ${o.tp} | ${o.lot} lot</span>
+      </div>`;
+    });
+    html += `</div>`;
+  } else if(on) {
+    html += `<div class="nte-info">Menunggu jendela 2 menit sebelum berita High-Impact untuk memasang pending order.</div>`;
+  } else {
+    html += `<div class="nte-info">Mode blackout pasif aktif (klik tombol ⚡ News Engine di atas untuk mengaktifkan).</div>`;
+  }
+
+  html += `</div></div>`;
+  el.innerHTML = html;
+}
+$('#stopBtn').onclick=()=>{ if(confirm('EMERGENCY STOP: bot akan MENUTUP SEMUA posisinya lalu berhenti.\nBot baru bisa jalan lagi setelah start_bot.cmd reset.\n\nLanjutkan?')) control('emergency'); };
+
+// ---- lapisan: preset satu klik + switch detail, pilihan diingat
+// preset menggantikan 17 toggle sbg pilihan UTAMA: default harus bisa dibaca dalam 5 detik.
+// Lanjutan (di menu "Lanjutan ▾") tetap berisi toggle per lapisan untuk yang butuh detail.
+const PRESETS = {
+  bersih:  ['trades','sr'],                                                           // candle + posisi + S/R terdekat saja
+  trading: ['trades','entryline','plan','sr','srmtf','refs','news'],                  // default: + plan terbaik, berita, S/R multi-TF
+  belajar: ['candle','doji','chart','sr','trend','ema','ob','fvg','bos','liq','trades','entry','entryline','plan','rejected','srmtf','refs','news'],
+};
+const PRESET_DEFAULT = 'trading';
+const savedL = store.get('layers', null);
+if(savedL) document.querySelectorAll('[data-l]').forEach(e=>{ if(e.dataset.l in savedL) e.checked=savedL[e.dataset.l]; });
+function layerLabel(){
+  const L=layers(), on=Object.keys(L).filter(k=>L[k]).sort().join();
+  $('#layerBtn').textContent=`Lapisan (${Object.values(L).filter(Boolean).length}) ▾`;
+  document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('on', PRESETS[b.dataset.p].slice().sort().join()===on));
+}
+function layersChanged(){ store.set('layers',layers()); layerLabel(); chartData&&drawChart(); }
+document.querySelectorAll('[data-l]').forEach(e=>e.onchange=layersChanged);
+document.querySelectorAll('#presets button').forEach(b=>b.onclick=()=>{
+  const P=PRESETS[b.dataset.p]; document.querySelectorAll('[data-l]').forEach(e=>e.checked=P.includes(e.dataset.l)); layersChanged(); });
+function popToggle(btn,pop){ $(btn).onclick=ev=>{ ev.stopPropagation(); document.querySelectorAll('.pop.open,.layer-pop.open').forEach(p=>p!==$(pop)&&p.classList.remove('open')); $(pop).classList.toggle('open'); };
+  $(pop).onclick=ev=>ev.stopPropagation(); }
+popToggle('#layerBtn','#layerPop');
+document.addEventListener('click',()=>document.querySelectorAll('.pop.open,.layer-pop.open').forEach(p=>p.classList.remove('open')));
+layerLabel();
+
+// ---- laci "Atur dashboard"
+function drawer(open){ $('#drawer').classList.toggle('open',open); $('#scrim').classList.toggle('open',open); }
+$('#viewBtn').onclick=ev=>{ ev.stopPropagation(); drawer(!$('#drawer').classList.contains('open')); };
+$('#drawerClose').onclick=()=>drawer(false); $('#scrim').onclick=()=>drawer(false);
+document.addEventListener('keydown',ev=>{ if(ev.key==='Escape') drawer(false); });
+
+// ---- tampilan
+const VIEW_DEF = {compact:false, labels:true, live:true, spark:true, height:560, bars:300, side:360};
+const VIEW = Object.assign({}, VIEW_DEF, store.get('view',{}));
+function resizePlots(){ ['chart','learnchart','eqspark'].forEach(id=>{ const el=document.getElementById(id); if(el&&el.data&&el.offsetParent) Plotly.Plots.resize(el); }); }
+function applyView(redraw){
+  document.body.classList.toggle('compact', VIEW.compact);
+  document.body.classList.toggle('nospark', !VIEW.spark);
+  document.documentElement.style.setProperty('--side-w', VIEW.side+'px');
+  $('#chart').style.height = VIEW.height+'px';
+  document.querySelectorAll('[data-v]').forEach(e=>e.checked=!!VIEW[e.dataset.v]);
+  document.querySelectorAll('[data-opt]').forEach(s=>s.querySelectorAll('button').forEach(b=>b.classList.toggle('on', +b.dataset.val===VIEW[s.dataset.opt])));
+  store.set('view',VIEW); sideTop();
+  if(redraw && chartData) drawChart();
+  requestAnimationFrame(resizePlots);
+}
+document.querySelectorAll('[data-v]').forEach(e=>e.onchange=()=>{ VIEW[e.dataset.v]=e.checked; applyView(e.dataset.v==='labels'); if(e.dataset.v==='live'&&e.checked) refreshAll(); });
+document.querySelectorAll('[data-opt] button').forEach(b=>b.onclick=()=>{ const k=b.parentElement.dataset.opt; VIEW[k]=+b.dataset.val; applyView(false); if(k==='bars') resetView(); });
+applyView(false);
+
+// ---- tata letak: panel samping & tab data bisa disembunyikan dan diurutkan ulang
+const SIDE_NAMES = {sum:'Ringkasan & P/L', lv:'Saran Level Trading', news:'Berita 24 jam', skills:'Profil & skill', sym:'Simbol (switch ON/OFF)', burst:'Burst', conn:'Koneksi & kesehatan', info:'Detail / alasan entry'};
+const TAB_NAMES  = {pos:'Posisi terbuka', perf:'Performa per simbol', eval:'Evaluasi profil/skill', sig:'Log sinyal', burst:'Tiket burst', mt5:'Akun MT5', learn:'Adaptive learning', log:'Log & koneksi', legend:'Legenda chart'};
+const LAYOUT_DEF = () => ({side:Object.keys(SIDE_NAMES).map(id=>({id,on:true})), tabs:Object.keys(TAB_NAMES).map(id=>({id,on:true})), tab:'pos'});
+function loadLayout(){  // gabungkan simpanan lama dengan daftar terbaru (panel baru otomatis muncul)
+  const s=store.get('layout',null), d=LAYOUT_DEF(); if(!s) return d;
+  for(const k of ['side','tabs']){ const known=new Set(d[k].map(x=>x.id)); s[k]=(s[k]||[]).filter(x=>known.has(x.id));
+    d[k].forEach(x=>{ if(!s[k].some(y=>y.id===x.id)){ const at=x.id==='lv'?s[k].findIndex(y=>y.id==='sum')+1:0; if(at>0) s[k].splice(at,0,x); else s[k].push(x); } }); }
+  s.tab=s.tab||'pos'; return s;
+}
+let LAYOUT = loadLayout();
+function applyLayout(){
+  const side=$('#side');
+  LAYOUT.side.forEach(p=>{ const el=side.querySelector(`[data-panel="${p.id}"]`); side.appendChild(el); el.hidden=!p.on; });
+  const bar=$('#tabbar');
+  LAYOUT.tabs.forEach(t=>{ const b=bar.querySelector(`[data-tab="${t.id}"]`); bar.appendChild(b); b.hidden=!t.on; });
+  bar.appendChild($('#symfilter'));            // filter simbol selalu di ujung kanan bar tab
+  const vis=LAYOUT.tabs.filter(t=>t.on).map(t=>t.id);
+  if(!vis.includes(LAYOUT.tab)) LAYOUT.tab = vis[0] || 'none';
+  setTab(LAYOUT.tab, true);
+  renderOrder('#orderSide','side',SIDE_NAMES); renderOrder('#orderTabs','tabs',TAB_NAMES);
+  store.set('layout',LAYOUT); sideTop();
+}
+function renderOrder(sel,key,names){
+  const L=LAYOUT[key];
+  $(sel).innerHTML = L.map((x,i)=>`<div class="it ${x.on?'':'off'}"><label class="sw"><input type="checkbox" data-k="${key}" data-i="${i}" ${x.on?'checked':''}><span class="knob"></span>${names[x.id]}</label>
+    <button data-k="${key}" data-i="${i}" data-d="-1" ${i===0?'disabled':''} title="Naikkan">↑</button><button data-k="${key}" data-i="${i}" data-d="1" ${i===L.length-1?'disabled':''} title="Turunkan">↓</button></div>`).join('');
+  $(sel).querySelectorAll('input').forEach(e=>e.onchange=()=>{ LAYOUT[e.dataset.k][+e.dataset.i].on=e.checked; applyLayout(); });
+  $(sel).querySelectorAll('button').forEach(b=>b.onclick=()=>{ const A=LAYOUT[b.dataset.k], i=+b.dataset.i, j=i+(+b.dataset.d); [A[i],A[j]]=[A[j],A[i]]; applyLayout(); });
+}
+function setTab(id, quiet){
+  LAYOUT.tab=id;
+  document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on', b.dataset.tab===id));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on', p.dataset.pane===id));
+  if(!quiet) store.set('layout',LAYOUT);
+  requestAnimationFrame(resizePlots);
+}
+document.querySelectorAll('#tabbar button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+$('#resetLayout').onclick=()=>{ if(!confirm('Kembalikan semua pengaturan tampilan, panel & lapisan ke bawaan?')) return;
+  LAYOUT=LAYOUT_DEF(); Object.assign(VIEW,VIEW_DEF); for(const k in FOLD) delete FOLD[k]; store.set('fold',FOLD);
+  document.querySelectorAll('.card.collapsed').forEach(c=>c.classList.remove('collapsed'));
+  document.querySelectorAll('[data-l]').forEach(e=>e.checked=PRESETS.all.includes(e.dataset.l)); store.set('layers',layers()); layerLabel();
+  applyLayout(); applyView(true); resetView(); };
+
+// ---- panel bisa dilipat (diingat per panel)
+const FOLD = store.get('fold', {});
+document.querySelectorAll('section.card:not(#info)>h3').forEach(h=>{
+  const key=h.firstChild.textContent.trim(); h.classList.add('fold'); h.title='Klik untuk melipat / membuka panel';
+  if(FOLD[key]) h.parentElement.classList.add('collapsed');
+  h.onclick=ev=>{ if(ev.target.closest('small')) return; const c=h.parentElement.classList.toggle('collapsed'); FOLD[key]=c; store.set('fold',FOLD);
+    if(!c) h.parentElement.querySelectorAll('.js-plotly-plot').forEach(p=>Plotly.Plots.resize(p)); };
+});
+$('#expandAll').onclick=()=>{ document.querySelectorAll('.card.collapsed').forEach(c=>c.classList.remove('collapsed')); for(const k in FOLD) delete FOLD[k]; store.set('fold',FOLD); requestAnimationFrame(resizePlots); };
+applyLayout();
+
+// ---- filter simbol untuk tabel Posisi / Log sinyal / Tiket burst
+function setSymFilter(s, quiet){
+  SYMF = s||''; store.set('symf',SYMF);
+  $('#symfilter').value = SYMF; $('#symfilter').classList.toggle('on', !!SYMF);
+  if(!quiet){ if(state) loadState(state); loadSignals(); loadBursts(); if(SYMF) setTab('pos'); }
+}
+$('#symfilter').onchange = e => setSymFilter(e.target.value);
+
+// ---- pemilih bot: dashboard lain (port lain) + status singkatnya
+async function loadPeers(){
+  const R = await Promise.all((CFG.peers||[]).map(p=>fetch(`${location.protocol}//${location.hostname}:${p}/api/ping`).then(r=>r.json()).catch(()=>({port:p,offline:true}))));
+  $('#botsw').innerHTML = R.length>1 ? R.map(r=>`<button class="${r.port===CFG.port?'on':''}" data-port="${r.port}" ${r.offline?'disabled title="dashboard ini tidak berjalan"':''}>
+      <span class="d ${r.offline?'':r.running?'ok':'err'}"></span>${r.offline?'port '+r.port:r.name}${r.offline?'':`<span class="n">${r.positions}</span>`}</button>`).join('') : '';
+  document.querySelectorAll('#botsw button').forEach(b=>b.onclick=()=>{ if(+b.dataset.port!==CFG.port) location.port=b.dataset.port; });
+}
+new ResizeObserver(()=>{ sideTop(); resizePlots(); }).observe(document.body);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ loadState(); loadChart(); } });
+
+(async function init(){
+  CFG=await j('/api/config');
+  SYM=CFG.symbols.includes(store.get('sym'))?store.get('sym'):CFG.symbols[0];
+  if(!CFG.chart_tfs.includes(TF)) TF='M5';
+  document.title = `${CFG.name} · XAUUSD Dashboard`;
+  renderTabs();
+  $('#symfilter').innerHTML = '<option value="">Semua simbol</option>' + (CFG.all_symbols||CFG.symbols).map(s=>`<option>${s}</option>`).join('');
+  setSymFilter(SYMF, true);
+  poll(loadState,1500); poll(loadChart,15000); poll(loadNews,30000); poll(loadDataInfo,20000); startStream(); poll(loadSignals,8000); poll(loadBursts,5000); poll(loadMT5,2000);
+  poll(loadAudit,10000); poll(loadHealth,10000); poll(loadLearning,60000); poll(loadPeers,5000); poll(loadEval,15000);
+})();
+</script>
+</body>
+</html>

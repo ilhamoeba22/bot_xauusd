@@ -1,0 +1,23 @@
+{
+  "_catatan": "Profil RoboForex Pro — tanpa komisi, spread menengah. Akun aktif saat ini (#68341243).",
+  "broker": {
+    "name": "RoboForex-Pro",
+    "account_type": "pro",
+    "commission_per_lot_usd": 0.0,
+    "typical_spread_xauusd": 25,
+    "_setup": "Profil ini sesuai dengan akun RoboForex-Pro yang sedang aktif (#68341243). Tidak perlu perubahan khusus — config.json sudah dikonfigurasi untuk broker ini."
+  },
+  "symbols": {
+    "XAUUSD": {
+      "enabled": true,
+      "max_spread_points": 60,
+      "max_spread_atr_pct": 25.0,
+      "commission_price_units": 0.0,
+      "deviation_points": 30,
+      "lot_min_override": 0,
+      "lot_max_override": 1.0
+    },
+    "XAUUSD247": {"enabled": false},
+    "XAUUSDc": {"enabled": false}
+  }
+}

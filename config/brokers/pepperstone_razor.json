@@ -1,0 +1,23 @@
+{
+  "_catatan": "Profil Pepperstone Razor — komisi ~$7/lot, spread sangat rendah, eksekusi cepat ECN.",
+  "broker": {
+    "name": "Pepperstone-Razor",
+    "account_type": "razor",
+    "commission_per_lot_usd": 7.0,
+    "typical_spread_xauusd": 18,
+    "_setup": "1. Login akun Pepperstone Razor di MT5. 2. Ubah config.json -> broker -> name='Pepperstone-Razor', commission_per_lot_usd=7.0, typical_spread_xauusd=18. 3. Simbol XAUUSD tersedia. 4. Nonaktifkan XAUUSD247 dan XAUUSDc."
+  },
+  "symbols": {
+    "XAUUSD": {
+      "enabled": true,
+      "max_spread_points": 45,
+      "max_spread_atr_pct": 18.0,
+      "commission_price_units": 0.0,
+      "deviation_points": 20,
+      "lot_min_override": 0,
+      "lot_max_override": 1.0
+    },
+    "XAUUSD247": {"enabled": false},
+    "XAUUSDc": {"enabled": false}
+  }
+}

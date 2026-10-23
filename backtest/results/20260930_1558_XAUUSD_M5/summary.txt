@@ -1,0 +1,38 @@
+========================================================================
+ BACKTEST XAUUSD M5   (2025-09-30 s/d 2026-09-30)
+========================================================================
+  Jumlah trade        : 516  (~1.98/hari bursa)
+  Win rate            : 64.34%
+  Profit factor       : 1.001
+  Expectancy          : 0.0003 R/trade   (rata2 menang 0.453R, kalah -0.817R)
+  Max drawdown        : -31.42%
+  Return              : -3.09%  (compounding)
+  Risiko              : 0.15%/tiket, burst 10 (multiply), risiko terbuka maks 1.5%
+  Kalah beruntun max  : 8
+  PF paruh 1 / paruh 2: [0.954, 1.05]
+
+  VERDICT: TIPIS — keunggulan kecil, rentan biaya/slippage riil. Demo panjang dulu.
+
+  Per sesi:
+    asia         161 trade  WR  65.8%  PF  1.28  total    +12.2R
+    london       101 trade  WR  60.4%  PF  0.66  total    -11.7R
+    newyork      254 trade  WR  65.0%  PF  1.00  total     -0.3R
+
+  Per alasan keluar:
+    SL           131 trade  WR   0.0%  PF  0.00  total   -134.0R
+    sinyal balik     5 trade  WR   0.0%  PF  0.00  total     -4.3R
+    trail        380 trade  WR  87.4%  PF 12.58  total   +138.5R
+
+  Per bulan:
+    2025-10       12 trade  WR  50.0%  PF  0.48  total     -3.2R
+    2025-11       50 trade  WR  74.0%  PF  1.40  total     +4.2R
+    2025-12       35 trade  WR  54.3%  PF  0.55  total     -7.3R
+    2026-01       42 trade  WR  71.4%  PF  1.64  total     +5.4R
+    2026-02       48 trade  WR  77.1%  PF  2.01  total     +9.2R
+    2026-03       46 trade  WR  58.7%  PF  0.78  total     -3.4R
+    2026-04       40 trade  WR  40.0%  PF  0.16  total    -14.6R
+    2026-05       50 trade  WR  60.0%  PF  0.78  total     -3.7R
+    2026-06       57 trade  WR  66.7%  PF  1.74  total     +9.5R
+    2026-07       44 trade  WR  65.9%  PF  0.84  total     -1.9R
+    2026-08       46 trade  WR  78.3%  PF  1.61  total     +6.7R
+    2026-09       46 trade  WR  58.7%  PF  0.96  total     -0.6R

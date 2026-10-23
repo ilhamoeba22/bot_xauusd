@@ -1,0 +1,208 @@
+{
+  "generated": "2026-09-30T15:59:04",
+  "config": "D:\\Pribadi\\TRADE\\AI ILHAM\\XAUUSD Trading Bot\\config\\config.json",
+  "fingerprint": null,
+  "timeframe": "M5",
+  "months": 12,
+  "results": {
+    "XAUUSD": {
+      "walk_forward": [
+        {
+          "params": {
+            "entry": {
+              "name": "ema_cross",
+              "fast": 9,
+              "slow": 34
+            },
+            "sl_atr": 1.5,
+            "trail_atr": 1.2,
+            "trend_on": false,
+            "atr_min": 0.4
+          },
+          "in_sample": {
+            "trades": 460,
+            "trades_per_day": 2.51,
+            "win_rate_pct": 60.87,
+            "profit_factor": 1.167,
+            "expectancy_R": 0.0509,
+            "avg_win_R": 0.583,
+            "avg_loss_R": -0.776,
+            "max_drawdown_pct": -18.49,
+            "return_pct": 36.58,
+            "max_consecutive_losses": 6,
+            "period": "2025-09-30 s/d 2026-06-15"
+          },
+          "out_of_sample": {
+            "trades": 207,
+            "trades_per_day": 2.71,
+            "win_rate_pct": 57.0,
+            "profit_factor": 0.865,
+            "expectancy_R": -0.0449,
+            "avg_win_R": 0.506,
+            "avg_loss_R": -0.776,
+            "max_drawdown_pct": -16.32,
+            "return_pct": -14.56,
+            "max_consecutive_losses": 7,
+            "period": "2026-06-15 s/d 2026-09-30"
+          }
+        },
+        {
+          "params": {
+            "entry": {
+              "name": "ema_cross",
+              "fast": 9,
+              "slow": 34
+            },
+            "sl_atr": 2.0,
+            "trail_atr": 1.2,
+            "trend_on": false,
+            "atr_min": 0.4
+          },
+          "in_sample": {
+            "trades": 514,
+            "trades_per_day": 2.8,
+            "win_rate_pct": 62.84,
+            "profit_factor": 1.12,
+            "expectancy_R": 0.0287,
+            "avg_win_R": 0.425,
+            "avg_loss_R": -0.641,
+            "max_drawdown_pct": -20.4,
+            "return_pct": 21.47,
+            "max_consecutive_losses": 5,
+            "period": "2025-09-30 s/d 2026-06-15"
+          },
+          "out_of_sample": {
+            "trades": 236,
+            "trades_per_day": 3.09,
+            "win_rate_pct": 61.44,
+            "profit_factor": 0.932,
+            "expectancy_R": -0.0171,
+            "avg_win_R": 0.384,
+            "avg_loss_R": -0.656,
+            "max_drawdown_pct": -16.15,
+            "return_pct": -7.12,
+            "max_consecutive_losses": 7,
+            "period": "2026-06-15 s/d 2026-09-30"
+          }
+        },
+        {
+          "params": {
+            "entry": {
+              "name": "ema_cross",
+              "fast": 9,
+              "slow": 34
+            },
+            "sl_atr": 1.5,
+            "trail_atr": 0.8,
+            "trend_on": false,
+            "atr_min": 0.4
+          },
+          "in_sample": {
+            "trades": 457,
+            "trades_per_day": 2.49,
+            "win_rate_pct": 60.61,
+            "profit_factor": 1.107,
+            "expectancy_R": 0.0326,
+            "avg_win_R": 0.558,
+            "avg_loss_R": -0.776,
+            "max_drawdown_pct": -20.49,
+            "return_pct": 20.56,
+            "max_consecutive_losses": 6,
+            "period": "2025-09-30 s/d 2026-06-15"
+          },
+          "out_of_sample": {
+            "trades": 207,
+            "trades_per_day": 2.71,
+            "win_rate_pct": 57.0,
+            "profit_factor": 0.84,
+            "expectancy_R": -0.0533,
+            "avg_win_R": 0.491,
+            "avg_loss_R": -0.776,
+            "max_drawdown_pct": -17.79,
+            "return_pct": -16.68,
+            "max_consecutive_losses": 7,
+            "period": "2026-06-15 s/d 2026-09-30"
+          }
+        },
+        {
+          "params": {
+            "entry": {
+              "name": "ema_cross",
+              "fast": 9,
+              "slow": 34
+            },
+            "sl_atr": 2.0,
+            "trail_atr": 0.8,
+            "trend_on": false,
+            "atr_min": 0.4
+          },
+          "in_sample": {
+            "trades": 520,
+            "trades_per_day": 2.83,
+            "win_rate_pct": 62.88,
+            "profit_factor": 1.103,
+            "expectancy_R": 0.0244,
+            "avg_win_R": 0.417,
+            "avg_loss_R": -0.64,
+            "max_drawdown_pct": -20.82,
+            "return_pct": 17.88,
+            "max_consecutive_losses": 5,
+            "period": "2025-09-30 s/d 2026-06-15"
+          },
+          "out_of_sample": {
+            "trades": 236,
+            "trades_per_day": 3.09,
+            "win_rate_pct": 61.44,
+            "profit_factor": 0.913,
+            "expectancy_R": -0.022,
+            "avg_win_R": 0.376,
+            "avg_loss_R": -0.656,
+            "max_drawdown_pct": -17.29,
+            "return_pct": -8.68,
+            "max_consecutive_losses": 7,
+            "period": "2026-06-15 s/d 2026-09-30"
+          }
+        },
+        {
+          "params": {
+            "entry": {
+              "name": "ema_cross",
+              "fast": 9,
+              "slow": 34
+            },
+            "sl_atr": 1.0,
+            "trail_atr": 1.2,
+            "trend_on": false,
+            "atr_min": 0.4
+          },
+          "in_sample": {
+            "trades": 388,
+            "trades_per_day": 2.11,
+            "win_rate_pct": 55.93,
+            "profit_factor": 1.1,
+            "expectancy_R": 0.0424,
+            "avg_win_R": 0.835,
+            "avg_loss_R": -0.964,
+            "max_drawdown_pct": -22.53,
+            "return_pct": 20.6,
+            "max_consecutive_losses": 5,
+            "period": "2025-09-30 s/d 2026-06-15"
+          },
+          "out_of_sample": {
+            "trades": 180,
+            "trades_per_day": 2.36,
+            "win_rate_pct": 51.11,
+            "profit_factor": 0.855,
+            "expectancy_R": -0.0687,
+            "avg_win_R": 0.79,
+            "avg_loss_R": -0.967,
+            "max_drawdown_pct": -23.63,
+            "return_pct": -19.51,
+            "max_consecutive_losses": 9,
+            "period": "2026-06-15 s/d 2026-09-30"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "_catatan": "Profil khusus SESI ASIA (00:00 - 07:00 UTC / 07:00 - 14:00 WIB). Hasil backtest 12 bulan XAUUSD M5: Win Rate 65.84%, Profit Factor 1.281, Max Drawdown hanya -12.16%, Return +18.51%.",
+  "mode": "demo",
+  "live_trading_confirmed": false,
+  "magic": 260902,
+  "comment_tag": "xau-asia",
+  "mt5": {
+    "terminal_path": "",
+    "login": 0,
+    "server": "",
+    "_catatan": "Kosongkan semuanya = pakai terminal MT5 yang sedang terbuka & login."
+  },
+  "loop": {
+    "manage_interval_sec": 2,
+    "scan_interval_sec": 10,
+    "state_write_sec": 1
+  },
+  "risk": {
+    "risk_per_trade_pct": 0.15,
+    "max_risk_overshoot_mult": 1.5,
+    "max_positions_total": 10,
+    "daily_loss_limit_pct": 3.0,
+    "max_drawdown_pct": 15.0,
+    "max_consecutive_losses": 4,
+    "loss_pause_minutes": 60,
+    "burst_size": 10,
+    "burst_mode": "multiply",
+    "max_total_risk_pct": 1.5,
+    "daily_budget_gate": true
+  },
+  "symbols": {
+    "XAUUSD": {
+      "enabled": true,
+      "timeframe": "M5",
+      "max_positions": 10,
+      "risk_mult": 1.0,
+      "max_spread_points": 80,
+      "commission_price_units": 0.11,
+      "deviation_points": 30,
+      "lot_min_override": 0,
+      "lot_max_override": 1.0
+    }
+  },
+  "strategy": {
+    "atr_period": 14,
+    "entry": {
+      "name": "ema_cross",
+      "fast": 8,
+      "slow": 21
+    },
+    "filters": [
+      {
+        "name": "rsi_momentum",
+        "enabled": true,
+        "period": 14,
+        "long_min": 50,
+        "long_max": 70,
+        "short_min": 30,
+        "short_max": 50
+      },
+      {
+        "name": "atr_band",
+        "enabled": true,
+        "period": 14,
+        "window": 288,
+        "min_pct": 0.4,
+        "max_pct": 0.95
+      },
+      {
+        "name": "trend_ema",
+        "enabled": true,
+        "period": 200
+      }
+    ]
+  },
+  "exit": {
+    "sl_atr": 1.5,
+    "tp_atr": 0,
+    "be_trigger_atr": 0.8,
+    "be_lock_atr": 0.1,
+    "trail_start_atr": 1.0,
+    "trail_atr": 1.2,
+    "trail_tight_after_atr": 2.5,
+    "trail_tight_atr": 0.6,
+    "close_on_opposite_signal": true,
+    "max_hold_bars": 36
+  },
+  "sessions": {
+    "asia": {
+      "enabled": true,
+      "start_utc": 0,
+      "end_utc": 7
+    },
+    "london": {
+      "enabled": false,
+      "start_utc": 7,
+      "end_utc": 12
+    },
+    "newyork": {
+      "enabled": false,
+      "start_utc": 12,
+      "end_utc": 20
+    },
+    "late": {
+      "enabled": false,
+      "start_utc": 20,
+      "end_utc": 24
+    }
+  },
+  "smc": {
+    "filter_mode": "score",
+    "swing_k": 3
+  },
+  "learning": {
+    "enabled": true,
+    "mode": "observe",
+    "min_confidence": 0.45,
+    "retrain_every": 20,
+    "min_samples": 100,
+    "live_weight": 3.0,
+    "l2": 2.0
+  },
+  "bridge": {
+    "folder": "XAUUSD_EXNESS",
+    "timeframes": ["M1", "M5", "M15", "M30", "H1"],
+    "symbols": [],
+    "interval_sec": 2,
+    "bars": 300,
+    "max_candle_labels": 40,
+    "layers": {
+      "candle": true,
+      "doji": false,
+      "chart": true,
+      "sr": true,
+      "trend": true,
+      "ob": true,
+      "fvg": true,
+      "bos": true,
+      "liq": true,
+      "entry": true
+    }
+  },
+  "manual": {
+    "enabled": true,
+    "max_age_sec": 30,
+    "cooldown_sec": 10,
+    "respect_news": true
+  },
+  "dashboard": {
+    "closed_marker_minutes": 10
+  },
+  "news_filter": {
+    "enabled": true,
+    "url": "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
+    "currencies": ["USD"],
+    "impacts": ["High"],
+    "minutes_before": 30,
+    "minutes_after": 30,
+    "refresh_hours": 6,
+    "fail_open": true
+  },
+  "backtest": {
+    "months": 12,
+    "timeframe": "M5",
+    "start_equity": 100000000,
+    "extra_slippage_points": 5
+  }
+}

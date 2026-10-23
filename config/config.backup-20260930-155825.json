@@ -1,0 +1,660 @@
+{
+  "_catatan": "Semua parameter bot XAUUSD_EXNESS. Bot membaca ulang file ini tiap siklus scan (tanpa restart), KECUALI blok 'mode', 'mt5' dan 'magic' yang butuh restart.",
+  "mode": "demo",
+  "_mode_catatan": "paper = simulasi internal (TIDAK kirim order). demo = order sungguhan, HANYA mau jalan di akun DEMO. live = akun REAL, wajib live_trading_confirmed=true (lihat README bagian 'Sebelum mode live').",
+  "live_trading_confirmed": false,
+  "plans": {
+    "_catatan": "candidate_bars: sinyal terakhir (lolos/ditolak) tetap digambar sebagai garis entry referensi selama umurnya <= N bar TF EKSEKUSI simbol itu. 28 Sep: default lama 12 bar (~1 jam M5 / 3 jam M15) membuat garis entry hilang di semua market kecuali yang baru saja ada posisi -> dinaikkan supaya konsisten tampil di semua market (futureproof termasuk XAUUSDc).",
+    "candidate_bars": 200
+  },
+  "magic": 260901,
+  "comment_tag": "xau-scalp",
+  "mt5": {
+    "terminal_path": "",
+    "login": 0,
+    "server": "",
+    "_catatan": "Kosongkan semuanya = pakai terminal MT5 yang sedang terbuka & login. Password TIDAK disimpan di sini; login di terminal MT5."
+  },
+  "loop": {
+    "manage_interval_sec": 2,
+    "scan_interval_sec": 10,
+    "state_write_sec": 1,
+    "keep_awake": "display",
+    "_keep_awake_catatan": "display = cegah idle-sleep & layar mati selama bot jalan (Modern Standby mematikan proses bot 25 Sep). system = sistem saja. off = tidak diatur. Tutup lid / Sleep manual tetap menidurkan laptop."
+  },
+  "risk": {
+    "risk_per_trade_pct": 0.2,
+    "max_risk_overshoot_mult": 1.5,
+    "_overshoot_catatan": "Kalau lot minimum broker memaksa risiko > risk_per_trade_pct x angka ini, entry DILEWATI.",
+    "max_positions_total": 10,
+    "daily_loss_limit_pct": 4.0,
+    "_daily_catatan": "Diukur dari P/L BOT INI SAJA (magic sendiri, tertutup + mengambang) terhadap equity awal hari. Tercapai -> semua posisi ditutup & bot berhenti entry sampai hari server berikutnya.",
+    "max_drawdown_pct": 35.0,
+    "_dd_catatan": "Diukur dari puncak equity yang pernah dicatat bot. Tercapai -> semua posisi ditutup, bot HALT sampai file logs/HALT dihapus (start_bot.cmd reset). 25 Sep: dinaikkan 12 -> 25 karena burst 10 (backtest max DD 22%) sudah menyentuh 12% di drawdown normal (12 Nov 2025). daily_loss_limit_pct SENGAJA tetap 3: dinaikkan ke 4-6% justru memperbesar DD ke 28-30% dan hari terburuk ke -8,4%.",
+    "max_consecutive_losses": 4,
+    "loss_pause_minutes": 60,
+    "burst_size": 10,
+    "burst_mode": "multiply",
+    "_burst_catatan": "multiply = tiap tiket membawa risk_per_trade_pct penuh (10 tiket x 0.15% = 1.5% per sinyal; riil ~1.9% karena lot minimum 0.01 ~0.19%/tiket di akun Zero), hanya SATU burst aktif per simbol. split = lot dibagi, total risiko tetap risk_per_trade_pct.",
+    "max_total_risk_pct": 2.0,
+    "_max_total_risk_catatan": "Batas risiko TERBUKA gabungan semua simbol (posisi yang SL-nya sudah terkunci untung tidak dihitung). XAUUSD & XAUUSD247 bergerak identik; 1.5 = tepat satu burst 10 tiket berisiko pada satu waktu (burst simbol kedua baru boleh setelah burst pertama terkunci BE). Backtest burst 10: DD ~26% (vs 8.7% burst 3).",
+    "daily_budget_gate": true,
+    "_daily_budget_catatan": "Burst baru hanya dibuka kalau P/L hari ini - risiko terbuka - risiko burst baru masih di atas -daily_loss_limit_pct (rem harian tidak bisa 'terlewati' oleh burst yang kalah bersamaan).",
+    "_naik_risiko_20260925": "25 Sep atas permintaan user (opsi D): tiket 0.15->0.20%, max_total_risk 1.5->2.0, harian 3->4%, HALT DD 25->35%. Backtest 12 bln: PF 1.44 (sama), DD -30.2% (dulu -23.4%), return +562%, hari terburuk -5.5%, bulan terburuk -22.2%. Lot dibulatkan KE BAWAH: di equity ~83 jt, lot 0.02 hanya bila SL <= ~5 (sekitar 45% burst), selain itu tetap 0.01 -> risiko riil tidak pernah > 0.20%/tiket. Eksperimen 50 (akun sama) HALT di DD 20% -> berhenti lebih dulu.",
+    "max_account_open_risk_pct": 6.0,
+    "_account_cap_catatan": "SATU risk manager akun: total risiko terbuka SEMUA simbol & grup <= angka ini. Tidak diubah profil mana pun (sama seperti daily_loss_limit_pct & max_drawdown_pct).",
+    "min_spacing_atr": 0.5,
+    "_min_spacing_catatan": "28 Sep P3: jarak minimum antar-entri SEARAH pada simbol sama (x ATR TF eksekusi), dipakai backtest & profil NORMAL sbg basis. Profil override di risk_profiles.profiles.<NAMA>.min_spacing_atr."
+  },
+  "symbols": {
+    "XAUUSD": {
+      "enabled": true,
+      "timeframe": "M5",
+      "max_positions": 10,
+      "risk_mult": 1.0,
+      "max_spread_points": 80,
+      "commission_price_units": 0.11,
+      "_commission_catatan": "Biaya komisi pulang-pergi per 1 oz dalam satuan HARGA. Akun Zero ini: ~195.744 IDR/lot = 0.11 USD per oz. Hanya dipakai backtest; live membaca biaya asli dari broker.",
+      "deviation_points": 30,
+      "lot_min_override": 0,
+      "lot_max_override": 1.0,
+      "risk_group": "gold",
+      "_jadwal": "Tanpa trade_days: ikut jam pasar broker (XAUUSD tutup Jumat ~21:00 s/d Minggu ~23:00 UTC; bot otomatis menolak entry saat tick basi / pasar tutup).",
+      "round_step": 50
+    },
+    "XAUUSDc": {
+      "enabled": false,
+      "timeframe": "M5",
+      "max_positions": 2,
+      "risk_mult": 1.0,
+      "max_spread_points": 250,
+      "commission_price_units": 0.0,
+      "deviation_points": 40,
+      "lot_min_override": 0,
+      "lot_max_override": 5.0,
+      "_catatan": "Hanya ada di akun Standard CENT (saldo dalam USC). Akun 279718110 yang sekarang login TIDAK punya simbol ini — bot otomatis melewatinya dengan peringatan.",
+      "risk_group": "gold",
+      "round_step": 50
+    },
+    "XAUUSD247": {
+      "enabled": true,
+      "timeframe": "M5",
+      "max_positions": 10,
+      "risk_mult": 1.0,
+      "max_spread_points": 120,
+      "commission_price_units": 0.11,
+      "deviation_points": 40,
+      "lot_min_override": 0,
+      "lot_max_override": 0.5,
+      "_catatan": "Emas 24/7 (tanpa gap weekend, ikut trading Sabtu-Minggu). Harga bergerak SAMA dengan XAUUSD; eksposur ganda dicegah oleh risk.max_total_risk_pct.",
+      "risk_group": "gold",
+      "trade_days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "round_step": 50
+    },
+    "ETHUSD": {
+      "enabled": false,
+      "timeframe": "M15",
+      "risk_group": "ETHUSD",
+      "trade_days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "max_positions": 10,
+      "risk_mult": 1.0,
+      "max_spread_points": 300,
+      "commission_price_units": 0.0,
+      "commission_pct": 0.02,
+      "deviation_points": 200,
+      "lot_min_override": 0,
+      "lot_max_override": 10.0,
+      "sl_min_pct": 0.2,
+      "sl_max_pct": 2.0,
+      "tp_min_pct": 0,
+      "tp_max_pct": 0,
+      "sessions": {
+        "asia": {
+          "enabled": true,
+          "start_utc": 0,
+          "end_utc": 7
+        },
+        "london": {
+          "enabled": true,
+          "start_utc": 7,
+          "end_utc": 12
+        },
+        "newyork": {
+          "enabled": true,
+          "start_utc": 12,
+          "end_utc": 20
+        },
+        "late": {
+          "enabled": true,
+          "start_utc": 20,
+          "end_utc": 24
+        }
+      },
+      "exit": {
+        "sl_atr": 3.0,
+        "trail_atr": 1.6,
+        "be_trigger_atr": 1.0,
+        "trail_start_atr": 1.0,
+        "candle_trail_after_atr": 1.0,
+        "max_hold_bars": 144
+      },
+      "risk": {
+        "risk_per_trade_pct": 0.1,
+        "burst_size": 10,
+        "max_positions_total": 10,
+        "max_total_risk_pct": 1.0,
+        "max_consecutive_losses": 4,
+        "loss_pause_minutes": 60
+      },
+      "_catatan": "26 Sep: TIDAK LOLOS validasi -> enabled=false. Walk-forward 11 bln (Okt 2025-Sep 2026): parameter emas apa adanya PF 0,73; terbaik dari 72 kombinasi (M5 & M15) = setelan ini, out-of-sample PF 0,86 (biaya 0,02%), bahkan BIAYA NOL OOS PF 0,94 -> sinyal EMA-cross tidak punya edge di ETH. Kontrak 1 ETH/lot, lot min 0,1 (step 0,01). Boleh forward-test demo, JANGAN live.",
+      "_trading_24_7": "Pasar crypto buka 24/7: sessions semua jam ON + trade_days Senin-Minggu (terverifikasi 26 Sep Sabtu: tick berumur 0-2 dtk, bar M5 lengkap tiap Sabtu & Minggu). Jadwal ini menggantikan sessions global (emas: sesi late 20-24 UTC OFF).",
+      "_burst10_20260926": "26 Sep atas permintaan user (varian A): burst 5 -> 10 tiket x 0,10% = 1%/burst, grup maks 10 posisi / 1% risiko terbuka. Backtest 11 bln: PF 0,93 (OOS 0,83), DD -13%, -6,5% — tetap RUGI, dipasang atas keputusan user untuk forward test demo.",
+      "round_step": 50
+    },
+    "BTCUSD": {
+      "enabled": false,
+      "timeframe": "M15",
+      "risk_group": "BTCUSD",
+      "trade_days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "max_positions": 10,
+      "risk_mult": 1.0,
+      "max_spread_points": 3000,
+      "commission_price_units": 0.0,
+      "commission_pct": 0.02,
+      "deviation_points": 2000,
+      "lot_min_override": 0,
+      "lot_max_override": 0.5,
+      "sl_min_pct": 0.15,
+      "sl_max_pct": 1.5,
+      "tp_min_pct": 0,
+      "tp_max_pct": 0,
+      "sessions": {
+        "asia": {
+          "enabled": true,
+          "start_utc": 0,
+          "end_utc": 7
+        },
+        "london": {
+          "enabled": true,
+          "start_utc": 7,
+          "end_utc": 12
+        },
+        "newyork": {
+          "enabled": true,
+          "start_utc": 12,
+          "end_utc": 20
+        },
+        "late": {
+          "enabled": true,
+          "start_utc": 20,
+          "end_utc": 24
+        }
+      },
+      "exit": {
+        "sl_atr": 4.0,
+        "trail_atr": 1.2,
+        "be_trigger_atr": 1.0,
+        "trail_start_atr": 1.0,
+        "candle_trail_after_atr": 1.0,
+        "max_hold_bars": 144
+      },
+      "risk": {
+        "risk_per_trade_pct": 0.2,
+        "burst_size": 10,
+        "max_positions_total": 10,
+        "max_total_risk_pct": 2.0,
+        "max_consecutive_losses": 4,
+        "loss_pause_minutes": 60
+      },
+      "_catatan": "26 Sep: LOLOS TIPIS -> enabled=false (nyalakan manual untuk forward-test demo). M15, SL 4xATR (~1,2% harga), trail 1,2xATR. Walk-forward: in-sample PF 1,20, out-of-sample PF 1,07 (n 154), seluruh 11 bln PF 1,15 DD -3,8% (biaya 0,02%). Impas pada biaya ~0,035-0,05% per transaksi -> biaya asli Exness untuk BTC di akun ini BELUM diketahui (spread data 0, belum ada deal): ukur dari demo dulu. Kontrak 1 BTC/lot, lot min 0,01: dengan SL ~$1.000 lot min = ~0,22% equity 83 jt -> risk 0,20%/tiket x3 (0,10% akan ditolak 'lot min > batas').",
+      "_trading_24_7": "Pasar crypto buka 24/7: sessions semua jam ON + trade_days Senin-Minggu (terverifikasi 26 Sep Sabtu: tick berumur 0-2 dtk, bar M5 lengkap tiap Sabtu & Minggu). Jadwal ini menggantikan sessions global (emas: sesi late 20-24 UTC OFF).",
+      "_burst10_20260926": "26 Sep atas permintaan user (varian A): burst 3 -> 10 tiket x 0,20% = 2%/burst, grup maks 10 posisi / 2% risiko terbuka. Backtest 11 bln: PF 1,05 (OOS 1,06), DD -13% (dulu -3,8%), +5,6%, hari terburuk -3,9%; biaya 0,035% -> PF 0,98.",
+      "round_step": 1000
+    }
+  },
+  "strategy": {
+    "atr_period": 14,
+    "entry": {
+      "name": "ema_cross",
+      "fast": 8,
+      "slow": 21
+    },
+    "filters": [
+      {
+        "name": "rsi_momentum",
+        "enabled": false,
+        "_catatan": "25 Sep: dimatikan (mode risk taker A1). Backtest 12 bln burst 10: PF 1,38 -> 1,43, DD 22% -> 23,4%, hari terburuk -3,1% -> -4,1%, paruh 1,37/1,49, biaya+30 PF 1,38. Dipilih dari data yang sama (belum walk-forward). Kembalikan true untuk setelan sebelumnya.",
+        "period": 14,
+        "long_min": 50,
+        "long_max": 70,
+        "short_min": 30,
+        "short_max": 50
+      },
+      {
+        "name": "atr_band",
+        "enabled": true,
+        "period": 14,
+        "window": 288,
+        "min_pct": 0.4,
+        "max_pct": 0.95
+      },
+      {
+        "name": "trend_ema",
+        "enabled": true,
+        "period": 200
+      }
+    ]
+  },
+  "exit": {
+    "sl_atr": 1.5,
+    "tp_atr": 0,
+    "_tp_catatan": "0 = tanpa TP tetap, keluar lewat trailing adaptif / sinyal berlawanan / batas waktu.",
+    "be_trigger_atr": 0.5,
+    "be_lock_atr": 0.1,
+    "trail_start_atr": 0.6,
+    "trail_atr": 0.8,
+    "trail_tight_after_atr": 1.5,
+    "trail_tight_atr": 0.5,
+    "candle_trail": true,
+    "candle_trail_after_atr": 0.5,
+    "candle_trail_buffer_atr": 0.1,
+    "_candle_trail_catatan": "Setelah profit >= 0.5 x ATR, SL digeser ke low (BUY) / high (SELL) candle yang baru tertutup dikurangi 0.1 x ATR, tiap candle, tidak pernah mundur. Bersama BE-lock di 0.5 ATR: posisi yang sudah untung tidak dibiarkan berbalik jadi rugi (kecuali gap/slippage).",
+    "_trail_catatan": "Jarak trailing = trail_atr x ATR TERKINI (dihitung ulang tiap siklus), mengetat ke trail_tight_atr setelah profit >= trail_tight_after_atr x ATR.",
+    "close_on_opposite_signal": true,
+    "max_hold_bars": 36
+  },
+  "sessions": {
+    "asia": {
+      "enabled": true,
+      "start_utc": 0,
+      "end_utc": 7
+    },
+    "london": {
+      "enabled": true,
+      "start_utc": 7,
+      "end_utc": 12
+    },
+    "newyork": {
+      "enabled": true,
+      "start_utc": 12,
+      "end_utc": 20
+    },
+    "late": {
+      "enabled": false,
+      "start_utc": 20,
+      "end_utc": 24
+    }
+  },
+  "smc": {
+    "filter_mode": "score",
+    "swing_k": 3,
+    "_catatan": "Seberapa ketat konfluensi Smart Money Concepts memengaruhi entry. off = diabaikan. score = hanya dihitung, digambar & jadi fitur pembelajaran (TIDAK mengubah entry) <- default. prefer = entry melawan bias struktur tetap boleh tapi burst dikecilkan jadi 1 tiket. strict = entry WAJIB searah bias struktur. Backtest 12 bln: score PF 1.37 | prefer PF 1.30 | strict PF 1.22 (lebih buruk) — jangan ubah tanpa backtest ulang."
+  },
+  "learning": {
+    "enabled": true,
+    "mode": "observe",
+    "min_confidence": 0.45,
+    "retrain_every": 20,
+    "min_samples": 100,
+    "live_weight": 3.0,
+    "l2": 2.0,
+    "_catatan": "observe = model dilatih ulang & skor keyakinan tiap entry ditampilkan, TIDAK menolak entry <- default. gate = entry dengan skor < min_confidence ditolak (paper/demo bebas; LIVE hanya kalau backtest --learning membuktikan gate membantu, hasil <= 30 hari). Validasi walk-forward saat ini: gate TIDAK terbukti membantu."
+  },
+  "bridge": {
+    "folder": "XAUUSD_EXNESS",
+    "timeframes": [
+      "M1",
+      "M5",
+      "M15",
+      "M30",
+      "H1"
+    ],
+    "symbols": [],
+    "interval_sec": 2,
+    "bars": 300,
+    "max_candle_labels": 40,
+    "layers": {
+      "candle": true,
+      "doji": false,
+      "chart": true,
+      "sr": true,
+      "trend": true,
+      "ob": true,
+      "fvg": true,
+      "bos": true,
+      "liq": true,
+      "entry": true,
+      "entryline": true,
+      "plan": true,
+      "rejected": false,
+      "srmtf": true,
+      "refs": true,
+      "news": true,
+      "trades": true
+    },
+    "_catatan": "Engine bridge (python -m bot.bridge) menulis objek analisis ke folder MT5 Common/Files/XAUUSD_EXNESS untuk indikator mql5/XAUUSD_Bridge_Draw. symbols kosong = semua simbol aktif. layers = lapisan yang digambar di chart MT5 (tidak memengaruhi trading).",
+    "_layers_catatan": "29 Sep: rejected default FALSE (samakan dgn preset Trading web — plan DITOLAK disembunyikan default). entryline/plan di sini HANYA menggambar kandidat MENUNGGU/DITOLAK; posisi AKTIF nyata sudah diwakili agregat di layer trades (mark_lines/AGG_*), supaya tidak dobel dgn detail SL/TP per-burst lama."
+  },
+  "manual": {
+    "enabled": true,
+    "max_age_sec": 30,
+    "cooldown_sec": 10,
+    "respect_news": true,
+    "_catatan": "Tombol BUY/SELL di indikator MT5 XAUUSD_Bridge_Draw. Bot yang mengeksekusi (burst, SL xATR, trailing, jurnal sama dengan entry otomatis). SEMUA rem risiko tetap berlaku (HALT, rugi harian, anggaran harian, jeda kalah beruntun, posisi maksimal, risiko terbuka, spread, pasar tutup, Algo Trading, berita bila respect_news). Yang diabaikan: sinyal EMA, filter sesi, status Burst OFF/Pause. max_age_sec = perintah lebih tua dari ini ditolak; cooldown_sec = jeda minimal antar perintah per simbol.",
+    "require_h1_trend": true,
+    "h1_ema": 50,
+    "max_bursts_per_symbol": 1,
+    "_batas_catatan": "28 Sep post-mortem: 103 tiket manual -1,13 jt (2 burst manual -3,3 jt); melawan tren H1 PF 0,39. Tombol BUY/SELL MT5 ditolak bila melawan tren H1 (EMA50 3 jam) atau sudah ada 1 burst manual terbuka."
+  },
+  "dashboard": {
+    "closed_marker_minutes": 10,
+    "_catatan": "Marker entry/SL/TP posisi yang sudah ditutup tetap tampil N menit di chart (web & MT5) lalu dibersihkan otomatis."
+  },
+  "news_filter": {
+    "enabled": true,
+    "url": "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
+    "currencies": [
+      "USD"
+    ],
+    "impacts": [
+      "High"
+    ],
+    "minutes_before": 30,
+    "minutes_after": 30,
+    "refresh_hours": 6,
+    "fail_open": true,
+    "_catatan": "fail_open=true: kalau kalender gagal diunduh, bot TETAP jalan (dengan peringatan di log). Set false kalau ingin bot berhenti entry saat kalender tidak tersedia."
+  },
+  "backtest": {
+    "months": 12,
+    "timeframe": "M5",
+    "start_equity": 100000000,
+    "extra_slippage_points": 5
+  },
+  "_risk_group_catatan": "symbols.<SYM>.risk_group: simbol dalam grup yang sama BERBAGI risk.max_positions_total & max_total_risk_pct (emas = 'gold' karena XAUUSD/XAUUSD247/XAUUSDc bergerak identik). Crypto punya grup sendiri + override risk sendiri, jadi tidak memakan slot emas. Rem rugi harian, HALT drawdown = seluruh akun. Override per simbol: symbols.<SYM>.exit / .strategy / .sessions (jadwal pengganti utuh) / .risk.",
+  "risk_profiles": {
+    "_catatan": "Profil mengalikan nilai dasar per simbol (risk.* & symbols.<SYM>.risk = nilai dasar/NORMAL). risk_mult: % risiko per tiket (dijepit risk_per_trade_cap_pct). positions_mult: slot grup & batas risiko terbuka grup (burst ikut dipangkas bila slot < burst). bursts_per_symbol: burst aktif bersamaan per simbol. min_score: skor sinyal minimum 0-100 (rata-rata berbobot skill penilai yang ON). smc_required: true = entry wajib searah bias SMC, false = SMC hanya pemberat skor. cooldown_min: jeda antar-entry per simbol. intrabar_entry: boleh entry di candle berjalan bila sinyal bertahan intrabar_confirm_sec. trail_atr_mult: pengali ATR trailing (trailing TIDAK bisa dimatikan profil). Rem harian/HALT/akun tidak disentuh profil.",
+    "default": "AGGRESSIVE",
+    "allow_aggressive_live": false,
+    "risk_per_trade_cap_pct": 0.3,
+    "profiles": {
+      "CONSERVATIVE": {
+        "min_score": 50,
+        "smc_required": true,
+        "cooldown_min": 60,
+        "intrabar_entry": false,
+        "intrabar_confirm_sec": 0,
+        "bursts_per_symbol": 1,
+        "positions_mult": 0.5,
+        "risk_mult": 0.5,
+        "trail_atr_mult": 0.8,
+        "min_spacing_atr": 1.0
+      },
+      "NORMAL": {
+        "min_score": 40,
+        "smc_required": false,
+        "cooldown_min": 10,
+        "intrabar_entry": false,
+        "intrabar_confirm_sec": 0,
+        "bursts_per_symbol": 1,
+        "positions_mult": 1.0,
+        "risk_mult": 1.0,
+        "trail_atr_mult": 1.0,
+        "min_spacing_atr": 0.5,
+        "intrabar_min_score": 40,
+        "intrabar_smc_min": 0.0
+      },
+      "AGGRESSIVE": {
+        "min_score": 25,
+        "smc_required": false,
+        "cooldown_min": 2,
+        "intrabar_entry": true,
+        "intrabar_confirm_sec": 20,
+        "bursts_per_symbol": 2,
+        "positions_mult": 2.0,
+        "risk_mult": 1.5,
+        "trail_atr_mult": 1.1,
+        "min_spacing_atr": 0.3,
+        "intrabar_min_score": 40,
+        "intrabar_smc_min": 0.0
+      }
+    },
+    "_skor_catatan": "28 Sep, 872 sinyal emas historis: skor>=25 lolos 97.5% PF 1.40 | >=40 74% PF 1.42 | >=50 58% PF 1.48 | >=60 48% PF 1.24 (lebih buruk) -> CONSERVATIVE 50.",
+    "_intrabar_catatan": "29 Sep: entri candle berjalan butuh skor gabungan >= intrabar_min_score DAN komponen SMC >= intrabar_smc_min (tambahan di atas min_score). Alasan: 3/3 burst intrabar AGGRESSIVE (BTC SELL, SMC -1.0, skor 26-38) rugi -2,85jt. Entri bar-close tetap memakai min_score biasa (AGGRESSIVE 25). Set null/0 untuk menonaktifkan."
+  },
+  "force_run": {
+    "_catatan": "Mode TETAP RUN per simbol (dashboard / CMD): hanya melewati daily_budget_gate & cooldown profil. TIDAK melewati rem rugi harian, HALT drawdown, batas risiko akun, margin, spread, batas posisi. Kedaluwarsa di akhir hari server (00:00 UTC) atau max_hours, mana lebih dulu; lot dikali lot_mult.",
+    "expire_at_day_end": true,
+    "max_hours": 8,
+    "lot_mult": 0.5
+  },
+  "sr": {
+    "_catatan": "S/R multi-timeframe (bot/analysis/sr_mtf.py). round_step per simbol di symbols.<SYM>.round_step.",
+    "k": 3,
+    "zone_atr": 0.35,
+    "max_levels": 6,
+    "max_refs": 8,
+    "round_step": 50,
+    "refresh_sec": 300
+  },
+  "news_impact": {
+    "_catatan": "Peta relevansi berita per simbol (bisa diedit). tier per simbol: High/Medium/Low; simbol tanpa tier = tidak terdampak. Sumber: kalender FairEconomy (news_filter.url, cache logs/news_events.json) + RSS resmi Fed & SEC (cache logs/news_headlines.json, refresh 30 mnt). Arah dampak tidak ditebak; statistik reaksi dari data (NFP aturan kalender + fomc_dates). Headline tidak pernah memicu entry.",
+    "currencies": [
+      "USD"
+    ],
+    "headline_refresh_min": 30,
+    "min_samples": 8,
+    "rss": {
+      "Federal Reserve": "https://www.federalreserve.gov/feeds/press_all.xml",
+      "SEC": "https://www.sec.gov/news/pressreleases.rss"
+    },
+    "categories": {
+      "fomc": {
+        "icon": "$",
+        "keywords": [
+          "FOMC",
+          "Federal Funds Rate",
+          "Fed Chair",
+          "Powell",
+          "monetary policy",
+          "interest rate decision"
+        ],
+        "tier": {
+          "XAUUSD": "High",
+          "XAUUSDc": "High",
+          "XAUUSD247": "High",
+          "BTCUSD": "High",
+          "ETHUSD": "High"
+        }
+      },
+      "inflasi": {
+        "icon": "%",
+        "keywords": [
+          "CPI",
+          "PCE",
+          "PPI",
+          "Inflation"
+        ],
+        "tier": {
+          "XAUUSD": "High",
+          "XAUUSDc": "High",
+          "XAUUSD247": "High",
+          "BTCUSD": "Medium",
+          "ETHUSD": "Medium"
+        }
+      },
+      "nfp": {
+        "icon": "J",
+        "keywords": [
+          "Non-Farm",
+          "Nonfarm",
+          "Unemployment Rate",
+          "Employment Change",
+          "JOLTS"
+        ],
+        "tier": {
+          "XAUUSD": "High",
+          "XAUUSDc": "High",
+          "XAUUSD247": "High",
+          "BTCUSD": "Medium",
+          "ETHUSD": "Medium"
+        }
+      },
+      "gdp_yield": {
+        "icon": "Y",
+        "keywords": [
+          "GDP",
+          "Treasury",
+          "Bond Auction",
+          "Retail Sales",
+          "ISM"
+        ],
+        "tier": {
+          "XAUUSD": "Medium",
+          "XAUUSDc": "Medium",
+          "XAUUSD247": "Medium",
+          "BTCUSD": "Low",
+          "ETHUSD": "Low"
+        }
+      },
+      "politik_as": {
+        "icon": "!",
+        "keywords": [
+          "tariff",
+          "sanction",
+          "President",
+          "White House"
+        ],
+        "tier": {
+          "XAUUSD": "High",
+          "XAUUSDc": "High",
+          "XAUUSD247": "High",
+          "BTCUSD": "Medium",
+          "ETHUSD": "Medium"
+        }
+      },
+      "geopolitik": {
+        "icon": "G",
+        "keywords": [
+          "war",
+          "missile",
+          "geopolit",
+          "conflict"
+        ],
+        "tier": {
+          "XAUUSD": "High",
+          "XAUUSDc": "High",
+          "XAUUSD247": "High",
+          "BTCUSD": "Medium",
+          "ETHUSD": "Medium"
+        }
+      },
+      "regulasi_kripto": {
+        "icon": "R",
+        "keywords": [
+          "crypto",
+          "digital asset",
+          "bitcoin",
+          "ether",
+          "stablecoin",
+          "ETF"
+        ],
+        "tier": {
+          "BTCUSD": "High",
+          "ETHUSD": "High"
+        }
+      },
+      "bursa_kripto": {
+        "icon": "X",
+        "keywords": [
+          "hack",
+          "exploit",
+          "exchange halt",
+          "insolvency",
+          "bankruptcy"
+        ],
+        "tier": {
+          "BTCUSD": "High",
+          "ETHUSD": "High"
+        }
+      },
+      "eth_jaringan": {
+        "icon": "E",
+        "keywords": [
+          "Ethereum upgrade",
+          "hard fork",
+          "ETH ETF",
+          "Ethereum"
+        ],
+        "tier": {
+          "ETHUSD": "Medium"
+        }
+      }
+    },
+    "blackout": {
+      "*": {
+        "before": 15,
+        "after": 15,
+        "tiers": [
+          "High"
+        ],
+        "action": "block",
+        "lot_mult": 0.5,
+        "sl_mult": 1.3
+      },
+      "BTCUSD": {
+        "before": 10,
+        "after": 20
+      },
+      "ETHUSD": {
+        "before": 10,
+        "after": 20
+      }
+    },
+    "_fomc_catatan": "Tanggal keputusan FOMC (pengumuman 14:00 ET). Verifikasi/ubah dari federalreserve.gov/monetarypolicy/fomccalendars.htm",
+    "fomc_dates": [
+      "2024-11-07",
+      "2024-12-18",
+      "2025-01-29",
+      "2025-03-19",
+      "2025-05-07",
+      "2025-06-18",
+      "2025-07-30",
+      "2025-09-17",
+      "2025-10-29",
+      "2025-12-10",
+      "2026-01-28",
+      "2026-03-18",
+      "2026-04-29",
+      "2026-06-17",
+      "2026-07-29",
+      "2026-09-16",
+      "2026-10-28",
+      "2026-12-09"
+    ]
+  }
+}

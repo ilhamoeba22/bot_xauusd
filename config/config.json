@@ -1,0 +1,421 @@
+{
+  "_catatan": "Bot Scalping Gold Universal — kompatibel semua broker MT5. Ganti blok broker sesuai akun Anda.",
+  "mode": "demo",
+  "_mode_catatan": "paper = simulasi internal (TIDAK kirim order). demo = order sungguhan, HANYA mau jalan di akun DEMO. live = akun REAL, wajib live_trading_confirmed=true (lihat README bagian 'Sebelum mode live').",
+  "live_trading_confirmed": false,
+  "magic": 260901,
+  "comment_tag": "xau-scalp",
+  "mt5": {
+    "terminal_path": "",
+    "login": 0,
+    "server": "",
+    "_catatan": "Kosongkan semuanya = pakai terminal MT5 yang sedang terbuka & login. Password TIDAK disimpan di sini; login di terminal MT5."
+  },
+  "loop": {
+    "manage_interval_sec": 1,
+    "scan_interval_sec": 5,
+    "state_write_sec": 1,
+    "keep_awake": "display",
+    "_keep_awake_catatan": "display = cegah idle-sleep & layar mati selama bot jalan (Modern Standby mematikan proses bot 25 Sep). system = sistem saja. off = tidak diatur. Tutup lid / Sleep manual tetap menidurkan laptop."
+  },
+  "risk": {
+    "risk_per_trade_pct": 0.12,
+    "max_risk_overshoot_mult": 1.5,
+    "_overshoot_catatan": "Kalau lot minimum broker memaksa risiko > risk_per_trade_pct x angka ini, entry DILEWATI.",
+    "max_positions_total": 6,
+    "daily_loss_limit_pct": 3.0,
+    "_daily_catatan": "Diukur dari P/L BOT INI SAJA (magic sendiri, tertutup + mengambang) terhadap equity awal hari. Tercapai -> semua posisi ditutup & bot berhenti entry sampai hari server berikutnya.",
+    "max_drawdown_pct": 15.0,
+    "_dd_catatan": "Diukur dari puncak equity yang pernah dicatat bot. Tercapai -> semua posisi ditutup, bot HALT sampai file logs/HALT dihapus (start_bot.cmd reset). 25 Sep: dinaikkan 12 -> 25 karena burst 10 (backtest max DD 22%) sudah menyentuh 12% di drawdown normal (12 Nov 2025). daily_loss_limit_pct SENGAJA tetap 3: dinaikkan ke 4-6% justru memperbesar DD ke 28-30% dan hari terburuk ke -8,4%.",
+    "max_consecutive_losses": 4,
+    "loss_pause_minutes": 60,
+    "burst_size": 3,
+    "burst_mode": "multiply",
+    "_burst_catatan": "multiply = tiap tiket membawa risk_per_trade_pct penuh (10 tiket x 0.15% = 1.5% per sinyal; riil ~1.9% karena lot minimum 0.01 ~0.19%/tiket di akun Zero), hanya SATU burst aktif per simbol. split = lot dibagi, total risiko tetap risk_per_trade_pct.",
+    "max_total_risk_pct": 0.6,
+    "_max_total_risk_catatan": "Batas risiko TERBUKA gabungan semua simbol (posisi yang SL-nya sudah terkunci untung tidak dihitung). XAUUSD & XAUUSD247 bergerak identik; 1.5 = tepat satu burst 10 tiket berisiko pada satu waktu (burst simbol kedua baru boleh setelah burst pertama terkunci BE). Backtest burst 10: DD ~26% (vs 8.7% burst 3).",
+    "daily_budget_gate": true,
+    "_daily_budget_catatan": "Burst baru hanya dibuka kalau P/L hari ini - risiko terbuka - risiko burst baru masih di atas -daily_loss_limit_pct (rem harian tidak bisa 'terlewati' oleh burst yang kalah bersamaan).",
+    "_audit_catatan": "Audit 30Sep2026: burst 10->3 (DD -31%->-13%), max_dd 25->15%, max_pos 10->6"
+  },
+  "symbols": {
+    "XAUUSD": {
+      "enabled": true,
+      "timeframe": "M3",
+      "max_positions": 3,
+      "risk_mult": 1.0,
+      "max_spread_points": 60,
+      "commission_price_units": 0.0,
+      "_commission_catatan": "Biaya komisi pulang-pergi per 1 oz dalam satuan HARGA. Akun Zero ini: ~195.744 IDR/lot = 0.11 USD per oz. Hanya dipakai backtest; live membaca biaya asli dari broker.",
+      "deviation_points": 30,
+      "lot_min_override": 0,
+      "lot_max_override": 1.0,
+      "max_spread_atr_pct": 25.0,
+      "risk_group": "gold",
+      "_audit_catatan": "Audit: max_pos 10->3, spread 80->60, +max_spread_atr_pct=25% (multi-broker)",
+      "_timeframe_catatan": "Timeframe M3 untuk scalping lincah & presisi",
+      "strategy": "bb_reversion"
+    },
+    "XAUUSDc": {
+      "enabled": false,
+      "timeframe": "M5",
+      "max_positions": 2,
+      "risk_mult": 1.0,
+      "max_spread_points": 250,
+      "commission_price_units": 0.0,
+      "deviation_points": 40,
+      "lot_min_override": 0,
+      "lot_max_override": 5.0,
+      "_catatan": "Hanya ada di akun Standard CENT (saldo dalam USC). Akun 279718110 yang sekarang login TIDAK punya simbol ini â€” bot otomatis melewatinya dengan peringatan.",
+      "max_spread_atr_pct": 40.0,
+      "risk_group": "gold"
+    },
+    "XAUUSD247": {
+      "enabled": false,
+      "timeframe": "M5",
+      "max_positions": 10,
+      "risk_mult": 1.0,
+      "max_spread_points": 120,
+      "commission_price_units": 0.11,
+      "deviation_points": 40,
+      "lot_min_override": 0,
+      "lot_max_override": 0.5,
+      "_catatan": "Emas 24/7 (tanpa gap weekend, ikut trading Sabtu-Minggu). Harga bergerak SAMA dengan XAUUSD; eksposur ganda dicegah oleh risk.max_total_risk_pct.",
+      "max_spread_atr_pct": 35.0,
+      "_audit_catatan": "Audit: dinonaktifkan (hanya Exness). Aktifkan manual jika broker Anda punya simbol ini."
+    }
+  },
+  "strategy": {
+    "atr_period": 14,
+    "entry": {
+      "name": "ema_cross",
+      "fast": 8,
+      "slow": 21
+    },
+    "filters": [
+      {
+        "name": "rsi_momentum",
+        "enabled": true,
+        "period": 14,
+        "long_min": 50,
+        "long_max": 60,
+        "short_min": 40,
+        "short_max": 50,
+        "_audit_catatan": "Audit: long_max 70->60, short_min 30->40 (ML bobot RSI>60 = -0.473, WR turun ke 54%)"
+      },
+      {
+        "name": "atr_band",
+        "enabled": true,
+        "period": 14,
+        "window": 288,
+        "min_pct": 0.35,
+        "max_pct": 0.95,
+        "_audit_catatan": "Audit: min_pct 0.4->0.35 agar peluang lebih banyak"
+      },
+      {
+        "name": "trend_ema",
+        "enabled": true,
+        "period": 200
+      }
+    ]
+  },
+  "strategy_aggressive": {
+    "_catatan": "Konfigurasi entry khusus profil AGGRESSIVE (smc_mtf engine). Dipakai otomatis saat profil=AGGRESSIVE. Filter: hanya atr_band (rsi_momentum dan trend_ema dihapus karena CHoCH+FVG sudah jadi momentum filter).",
+    "atr_period": 14,
+    "entry": {
+      "name": "smc_mtf",
+      "m15_k": 2,
+      "m15_min_amp_atr": 0.5,
+      "m15_ob_min_body_atr": 0.35,
+      "m3_k": 1,
+      "m3_choch_min_body_atr": 0.3,
+      "m3_choch_window_bars": 40,
+      "m3_fvg_min_gap_atr": 0.08,
+      "m3_fvg_entry_depth_pct": 50.0,
+      "use_m3_ema": false,
+      "_ema_catatan": "false = Pure SMC Price Action tanpa EMA filter (responsif seketika pada CHoCH+FVG)",
+      "bi_directional": true,
+      "max_choch_age_bars": 3
+    },
+    "filters": [
+      {
+        "name": "atr_band",
+        "enabled": true,
+        "period": 14,
+        "window": 288,
+        "min_pct": 0.1,
+        "max_pct": 0.98,
+        "_catatan": "Lebih longgar dari NORMAL/CONSERVATIVE: SMC setup valid di volatilitas yang lebih lebar"
+      }
+    ]
+  },
+  "exit": {
+    "sl_atr": 1.5,
+    "tp_atr": 0,
+    "_tp_catatan": "0 = tanpa TP tetap, keluar lewat trailing adaptif / sinyal berlawanan / batas waktu.",
+    "be_trigger_atr": 1.0,
+    "be_lock_atr": 0.15,
+    "trail_start_atr": 1.6,
+    "trail_atr": 1.0,
+    "trail_tight_after_atr": 2.2,
+    "trail_tight_atr": 0.6,
+    "candle_trail": true,
+    "candle_trail_after_atr": 1.6,
+    "candle_trail_buffer_atr": 0.15,
+    "_candle_trail_catatan": "Profit bernapas bebas sampai >= 1.4 ATR, baru SL+ aktif kunci komisi/spread (+0.15 ATR) dan trailing adaptif mengikuti ekor candle M3 terbaru.",
+    "_trail_catatan": "Jarak trailing awal 0.8 ATR, mengetat ke 0.4 ATR setelah profit >= 1.8 ATR (mengunci profit puncak tanpa tercekik noise).",
+    "close_on_opposite_signal": true,
+    "max_hold_bars": 36,
+    "close_on_bb_mid": true,
+    "_bb_mid_catatan": "true = take profit otomatis saat harga menyentuh garis tengah Bollinger Bands (SMA 20) ala Dark Venus"
+  },
+  "sessions": {
+    "asia": {
+      "enabled": true,
+      "start_utc": 0,
+      "end_utc": 7
+    },
+    "london": {
+      "enabled": true,
+      "start_utc": 7,
+      "end_utc": 12
+    },
+    "newyork": {
+      "enabled": true,
+      "start_utc": 12,
+      "end_utc": 20
+    },
+    "late": {
+      "enabled": true,
+      "start_utc": 20,
+      "end_utc": 24
+    }
+  },
+  "smc": {
+    "filter_mode": "prefer",
+    "swing_k": 3,
+    "_catatan": "Seberapa ketat konfluensi Smart Money Concepts memengaruhi entry. off = diabaikan. score = hanya dihitung, digambar & jadi fitur pembelajaran (TIDAK mengubah entry) <- default. prefer = entry melawan bias struktur tetap boleh tapi burst dikecilkan jadi 1 tiket. strict = entry WAJIB searah bias struktur. Backtest 12 bln: score PF 1.37 | prefer PF 1.30 | strict PF 1.22 (lebih buruk) â€” jangan ubah tanpa backtest ulang.",
+    "_audit_catatan": "Audit: score->prefer (FVG WR 73.3% bobot +0.161, OB WR 67.6% bobot +0.081)"
+  },
+  "learning": {
+    "enabled": true,
+    "mode": "observe",
+    "min_confidence": 0.45,
+    "retrain_every": 20,
+    "min_samples": 100,
+    "live_weight": 3.0,
+    "l2": 2.0,
+    "_catatan": "observe = model dilatih ulang & skor keyakinan tiap entry ditampilkan, TIDAK menolak entry <- default. gate = entry dengan skor < min_confidence ditolak (paper/demo bebas; LIVE hanya kalau backtest --learning membuktikan gate membantu, hasil <= 30 hari). Validasi walk-forward saat ini: gate TIDAK terbukti membantu."
+  },
+  "bridge": {
+    "folder": "XAUUSD_EXNESS",
+    "timeframes": [
+      "M1",
+      "M3",
+      "M5",
+      "M15",
+      "M30",
+      "H1"
+    ],
+    "symbols": [],
+    "interval_sec": 2,
+    "bars": 300,
+    "max_candle_labels": 40,
+    "layers": {
+      "candle": true,
+      "doji": false,
+      "chart": true,
+      "sr": true,
+      "trend": true,
+      "ob": true,
+      "fvg": true,
+      "bos": true,
+      "liq": true,
+      "entry": true
+    },
+    "_catatan": "Engine bridge (python -m bot.bridge) menulis objek analisis ke folder MT5 Common/Files/XAUUSD_EXNESS untuk indikator mql5/XAUUSD_Bridge_Draw. symbols kosong = semua simbol aktif. layers = lapisan yang digambar di chart MT5 (tidak memengaruhi trading)."
+  },
+  "manual": {
+    "enabled": true,
+    "max_age_sec": 30,
+    "cooldown_sec": 10,
+    "respect_news": true,
+    "_catatan": "Tombol BUY/SELL di indikator MT5 XAUUSD_Bridge_Draw. Bot yang mengeksekusi (burst, SL xATR, trailing, jurnal sama dengan entry otomatis). SEMUA rem risiko tetap berlaku (HALT, rugi harian, anggaran harian, jeda kalah beruntun, posisi maksimal, risiko terbuka, spread, pasar tutup, Algo Trading, berita bila respect_news). Yang diabaikan: sinyal EMA, filter sesi, status Burst OFF/Pause. max_age_sec = perintah lebih tua dari ini ditolak; cooldown_sec = jeda minimal antar perintah per simbol."
+  },
+  "dashboard": {
+    "closed_marker_minutes": 10,
+    "_catatan": "Marker entry/SL/TP posisi yang sudah ditutup tetap tampil N menit di chart (web & MT5) lalu dibersihkan otomatis."
+  },
+  "news_filter": {
+    "enabled": true,
+    "url": "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
+    "currencies": [
+      "USD"
+    ],
+    "impacts": [
+      "High"
+    ],
+    "minutes_before": 30,
+    "minutes_after": 30,
+    "refresh_hours": 6,
+    "fail_open": true,
+    "_catatan": "fail_open=true: kalau kalender gagal diunduh, bot TETAP jalan (dengan peringatan di log). Set false kalau ingin bot berhenti entry saat kalender tidak tersedia."
+  },
+  "news_trading": {
+    "enabled": true,
+    "strategy": "smart_adaptive",
+    "_strategy_catatan": "smart_adaptive = otomatis memilih Straddle (Breakout) saat konsolidasi atau Limit Rebound saat dekat level S/R. Opsi lain: straddle, limit_rebound.",
+    "minutes_before": 2,
+    "cancel_after_min": 5,
+    "min_seconds_before": 15,
+    "straddle_distance_atr": 1.2,
+    "limit_rebound_atr": 2.0,
+    "sl_atr": 1.5,
+    "tp_atr": 3.0,
+    "max_spread_points": 70,
+    "oco": true,
+    "tiers": [
+      "High"
+    ],
+    "currencies": [
+      "USD"
+    ]
+  },
+  "backtest": {
+    "months": 12,
+    "timeframe": "M5",
+    "start_equity": 100000000,
+    "extra_slippage_points": 5
+  },
+  "broker": {
+    "_catatan": "OTOMATIS (Default): Bot secara otomatis mengenali broker MT5 aktif, komisi riil, spread, dan simbol emas yang tersedia. Tidak perlu edit manual saat ganti broker MT5! Set auto_detect: false jika ingin mengunci manual.",
+    "name": "auto",
+    "account_type": "pro",
+    "commission_per_lot_usd": 0.0,
+    "typical_spread_xauusd": 25,
+    "presets": {
+      "_info": "Referensi cepat ganti broker — ubah nilai di blok broker di atas sesuai broker aktif Anda",
+      "exness_zero": {
+        "commission_per_lot_usd": 3.5,
+        "typical_spread_xauusd": 15
+      },
+      "exness_standard": {
+        "commission_per_lot_usd": 0.0,
+        "typical_spread_xauusd": 50
+      },
+      "ic_markets_raw": {
+        "commission_per_lot_usd": 7.0,
+        "typical_spread_xauusd": 20
+      },
+      "pepperstone_razor": {
+        "commission_per_lot_usd": 7.0,
+        "typical_spread_xauusd": 18
+      },
+      "roboforex_pro": {
+        "commission_per_lot_usd": 0.0,
+        "typical_spread_xauusd": 25
+      },
+      "fbs_standard": {
+        "commission_per_lot_usd": 0.0,
+        "typical_spread_xauusd": 100
+      },
+      "xm_zero": {
+        "commission_per_lot_usd": 3.5,
+        "typical_spread_xauusd": 10
+      },
+      "fpmarkets_raw": {
+        "commission_per_lot_usd": 6.0,
+        "typical_spread_xauusd": 15
+      }
+    },
+    "auto_detect": true
+  },
+  "risk_profiles": {
+    "_catatan": "Profil mengalikan nilai dasar per simbol (risk.* & symbols.<SYM>.risk = nilai dasar/NORMAL). risk_mult: % risiko per tiket (dijepit risk_per_trade_cap_pct). positions_mult: slot grup & batas risiko terbuka grup (burst ikut dipangkas bila slot < burst). bursts_per_symbol: burst aktif bersamaan per simbol. min_score: skor sinyal minimum 0-100 (rata-rata berbobot skill penilai yang ON). smc_required: true = entry wajib searah bias SMC, false = SMC hanya pemberat skor. cooldown_min: jeda antar-entry per simbol. intrabar_entry: boleh entry di candle berjalan bila sinyal bertahan intrabar_confirm_sec. trail_atr_mult: pengali ATR trailing (trailing TIDAK bisa dimatikan profil). Rem harian/HALT/akun tidak disentuh profil.",
+    "default": "AGGRESSIVE",
+    "allow_aggressive_live": false,
+    "risk_per_trade_cap_pct": 0.6,
+    "profiles": {
+      "CONSERVATIVE": {
+        "min_score": 50,
+        "smc_required": true,
+        "cooldown_min": 60,
+        "intrabar_entry": false,
+        "intrabar_confirm_sec": 0,
+        "bursts_per_symbol": 1,
+        "positions_mult": 0.5,
+        "risk_mult": 0.5,
+        "trail_atr_mult": 0.8,
+        "min_spacing_atr": 1.0
+      },
+      "NORMAL": {
+        "min_score": 40,
+        "smc_required": false,
+        "cooldown_min": 10,
+        "intrabar_entry": false,
+        "intrabar_confirm_sec": 0,
+        "bursts_per_symbol": 1,
+        "positions_mult": 1.0,
+        "risk_mult": 1.0,
+        "trail_atr_mult": 1.0,
+        "min_spacing_atr": 0.5,
+        "intrabar_min_score": 40,
+        "intrabar_smc_min": 0.0
+      },
+      "AGGRESSIVE": {
+        "min_score": 25,
+        "smc_required": false,
+        "cooldown_min": 1,
+        "intrabar_entry": false,
+        "_intrabar_catatan": "SMC MTF memakai limit order (pending), bukan intrabar market order — dimatikan",
+        "intrabar_confirm_sec": 20,
+        "bursts_per_symbol": 1,
+        "positions_mult": 2.0,
+        "risk_mult": 3.0,
+        "trail_atr_mult": 1.1,
+        "min_spacing_atr": 0.1,
+        "intrabar_min_score": 40,
+        "intrabar_smc_min": 0.0,
+        "use_smc_mtf": true,
+        "_smc_mtf_catatan": "Saat true, bot membaca config strategy_aggressive (smc_mtf engine) bukan strategy utama",
+        "sl_buffer_atr": 0.3,
+        "sl_floor_atr": 0.8,
+        "sl_max_atr": 2.0,
+        "_sl_catatan": "SL = swing origin M3 - buffer (0.3xATR), dijepit [1.0xATR, 2.2xATR] agar presisi sniper",
+        "rr_ratio": 1.8,
+        "_rr_catatan": "TP = entry + 1.8 x SL_distance (proper reward-to-risk payoff)",
+        "time_stop_bars": 15,
+        "_time_stop_catatan": "Tutup posisi jika dalam 20 bar M3 (60 menit) belum mencapai 0.5R profit",
+        "max_spread_pts": 50,
+        "_spread_catatan": "Entry dibatalkan jika spread > 50 pts saat limit order siap dipasang",
+        "bi_directional": true,
+        "execution_mode": "market",
+        "max_choch_age_bars": 3,
+        "use_bb_reversion": false,
+        "_bb_reversion_catatan": "true = AGGRESSIVE menjalankan Bollinger Bands Mean-Reversion (Dark Venus) menggantikan SMC MTF"
+      }
+    },
+    "_skor_catatan": "28 Sep, 872 sinyal emas historis: skor>=25 lolos 97.5% PF 1.40 | >=40 74% PF 1.42 | >=50 58% PF 1.48 | >=60 48% PF 1.24 (lebih buruk) -> CONSERVATIVE 50.",
+    "_intrabar_catatan": "29 Sep: entri candle berjalan butuh skor gabungan >= intrabar_min_score DAN komponen SMC >= intrabar_smc_min (tambahan di atas min_score). Alasan: 3/3 burst intrabar AGGRESSIVE (BTC SELL, SMC -1.0, skor 26-38) rugi -2,85jt. Entri bar-close tetap memakai min_score biasa (AGGRESSIVE 25). Set null/0 untuk menonaktifkan."
+  },
+  "active_strategy": "bb_reversion",
+  "_active_strategy_catatan": "smc_mtf = SMC Multi-Timeframe sniper | bb_reversion = Bollinger Bands Mean-Reversion (ala Dark Venus) | default = strategy utama",
+  "strategy_bb_reversion": {
+    "_catatan": "Strategi Bollinger Bands Pure Zone Reversion. Fade harga saat menyentuh zona batas luar Bollinger Bands (Support/Resistance).",
+    "atr_period": 14,
+    "entry": {
+      "name": "bb_reversion",
+      "period": 20,
+      "deviation": 2.0,
+      "mode": "fade_touch",
+      "_mode_catatan": "fade_touch (Pure Zone: masuk saat low <= lower band untuk BUY / high >= upper band untuk SELL)",
+      "first_touch_only": true,
+      "_first_touch_catatan": "true = hanya masuk pada bar pertama yang menyentuh zona (mencegah spam sinyal berturut-turut)",
+      "use_rsi": false,
+      "_rsi_catatan": "false = Pure Zone trading tanpa filter RSI",
+      "use_trend_filter": false,
+      "min_bandwidth_atr": 0.0
+    },
+    "filters": []
+  }
+}

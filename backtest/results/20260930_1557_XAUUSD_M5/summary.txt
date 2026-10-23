@@ -1,0 +1,33 @@
+========================================================================
+ BACKTEST XAUUSD M5   (2026-03-30 s/d 2026-09-30)
+========================================================================
+  Jumlah trade        : 284  (~2.16/hari bursa)
+  Win rate            : 61.62%
+  Profit factor       : 0.93
+  Expectancy          : -0.0215 R/trade   (rata2 menang 0.462R, kalah -0.798R)
+  Max drawdown        : -36.88%
+  Return              : -14.51%  (compounding)
+  Risiko              : 0.2%/tiket, burst 10 (multiply), risiko terbuka maks 2.0%
+  Kalah beruntun max  : 8
+  PF paruh 1 / paruh 2: [0.753, 1.168]
+
+  VERDICT: NEGATIF — strategi merugi setelah biaya. JANGAN live.
+
+  Per sesi:
+    asia          91 trade  WR  63.7%  PF  1.31  total     +7.5R
+    london        69 trade  WR  60.9%  PF  0.59  total    -10.0R
+    newyork      124 trade  WR  60.5%  PF  0.91  total     -3.6R
+
+  Per alasan keluar:
+    SL            74 trade  WR   0.0%  PF  0.00  total    -75.8R
+    sinyal balik     3 trade  WR   0.0%  PF  0.00  total     -2.9R
+    trail        207 trade  WR  84.5%  PF  9.77  total    +72.6R
+
+  Per bulan:
+    2026-03        2 trade  WR  50.0%  PF  0.04  total     -1.3R
+    2026-04       36 trade  WR  33.3%  PF  0.09  total    -16.2R
+    2026-05       49 trade  WR  57.1%  PF  0.80  total     -3.6R
+    2026-06       58 trade  WR  67.2%  PF  1.81  total    +10.4R
+    2026-07       46 trade  WR  67.4%  PF  0.88  total     -1.5R
+    2026-08       47 trade  WR  78.7%  PF  1.61  total     +6.7R
+    2026-09       46 trade  WR  58.7%  PF  0.96  total     -0.6R

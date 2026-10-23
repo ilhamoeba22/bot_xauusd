@@ -1,0 +1,51 @@
+{
+  "n_scored": 316,
+  "base": {
+    "n": 316,
+    "pf": 0.922,
+    "wr": 62.0,
+    "exp_R": -0.0235,
+    "sum_R": -7.4
+  },
+  "thresholds": [
+    {
+      "min_confidence": 0.45,
+      "n": 287,
+      "kept_pct": 90.8,
+      "pf": 0.859,
+      "wr": 61.0,
+      "exp_R": -0.0434,
+      "sum_R": -12.4
+    },
+    {
+      "min_confidence": 0.5,
+      "n": 264,
+      "kept_pct": 83.5,
+      "pf": 0.913,
+      "wr": 62.5,
+      "exp_R": -0.0257,
+      "sum_R": -6.8
+    },
+    {
+      "min_confidence": 0.55,
+      "n": 236,
+      "kept_pct": 74.7,
+      "pf": 0.825,
+      "wr": 61.4,
+      "exp_R": -0.0535,
+      "sum_R": -12.6
+    },
+    {
+      "min_confidence": 0.6,
+      "n": 203,
+      "kept_pct": 64.2,
+      "pf": 0.793,
+      "wr": 61.6,
+      "exp_R": -0.0644,
+      "sum_R": -13.1
+    }
+  ],
+  "generated": "2026-09-30T15:58:58",
+  "improves": false,
+  "recommended_min_confidence": null
+}

@@ -1,0 +1,6 @@
+MetaTrader5>=5.0.45
+pandas>=2.0
+numpy>=1.24
+psutil>=5.9
+matplotlib>=3.7   # opsional: grafik equity backtest
+TA-Lib>=0.6       # pola candlestick (wheel Windows tersedia di PyPI)

@@ -1,0 +1,207 @@
+{
+  "_catatan": "Semua parameter bot XAUUSD_EXNESS. Bot membaca ulang file ini tiap siklus scan (tanpa restart), KECUALI blok 'mode', 'mt5' dan 'magic' yang butuh restart.",
+  "mode": "demo",
+  "_mode_catatan": "paper = simulasi internal (TIDAK kirim order). demo = order sungguhan, HANYA mau jalan di akun DEMO. live = akun REAL, wajib live_trading_confirmed=true (lihat README bagian 'Sebelum mode live').",
+  "live_trading_confirmed": false,
+  "magic": 260901,
+  "comment_tag": "xau-scalp",
+  "mt5": {
+    "terminal_path": "",
+    "login": 0,
+    "server": "",
+    "_catatan": "Kosongkan semuanya = pakai terminal MT5 yang sedang terbuka & login. Password TIDAK disimpan di sini; login di terminal MT5."
+  },
+  "loop": {
+    "manage_interval_sec": 2,
+    "scan_interval_sec": 10,
+    "state_write_sec": 1
+  },
+  "risk": {
+    "risk_per_trade_pct": 0.15,
+    "max_risk_overshoot_mult": 1.5,
+    "_overshoot_catatan": "Kalau lot minimum broker memaksa risiko > risk_per_trade_pct x angka ini, entry DILEWATI.",
+    "max_positions_total": 6,
+    "daily_loss_limit_pct": 3.0,
+    "_daily_catatan": "Diukur dari P/L BOT INI SAJA (magic sendiri, tertutup + mengambang) terhadap equity awal hari. Tercapai -> semua posisi ditutup & bot berhenti entry sampai hari server berikutnya.",
+    "max_drawdown_pct": 12.0,
+    "_dd_catatan": "Diukur dari puncak equity yang pernah dicatat bot. Tercapai -> bot HALT permanen sampai file logs/HALT dihapus manual.",
+    "max_consecutive_losses": 4,
+    "loss_pause_minutes": 60,
+    "burst_size": 3,
+    "burst_mode": "multiply",
+    "_burst_catatan": "multiply = tiap tiket membawa risk_per_trade_pct penuh (3 tiket x 0.15% = 0.45% per sinyal), hanya SATU burst aktif per simbol. split = lot dibagi, total risiko tetap risk_per_trade_pct.",
+    "max_total_risk_pct": 0.45,
+    "_max_total_risk_catatan": "Batas risiko TERBUKA gabungan semua simbol (posisi yang SL-nya sudah terkunci untung tidak dihitung). XAUUSD & XAUUSD247 bergerak identik; 0.45 = hanya satu burst berisiko pada satu waktu. Backtest: tanpa batas ini DD 18.6%, dengan batas 8.7%.",
+    "daily_budget_gate": true,
+    "_daily_budget_catatan": "Burst baru hanya dibuka kalau P/L hari ini - risiko terbuka - risiko burst baru masih di atas -daily_loss_limit_pct (rem harian tidak bisa 'terlewati' oleh burst yang kalah bersamaan)."
+  },
+  "symbols": {
+    "XAUUSD": {
+      "enabled": true,
+      "timeframe": "M5",
+      "max_positions": 3,
+      "risk_mult": 1.0,
+      "max_spread_points": 80,
+      "commission_price_units": 0.11,
+      "_commission_catatan": "Biaya komisi pulang-pergi per 1 oz dalam satuan HARGA. Akun Zero ini: ~195.744 IDR/lot = 0.11 USD per oz. Hanya dipakai backtest; live membaca biaya asli dari broker.",
+      "deviation_points": 30,
+      "lot_min_override": 0,
+      "lot_max_override": 1.0
+    },
+    "XAUUSDc": {
+      "enabled": false,
+      "timeframe": "M5",
+      "max_positions": 2,
+      "risk_mult": 1.0,
+      "max_spread_points": 250,
+      "commission_price_units": 0.0,
+      "deviation_points": 40,
+      "lot_min_override": 0,
+      "lot_max_override": 5.0,
+      "_catatan": "Hanya ada di akun Standard CENT (saldo dalam USC). Akun 279718110 yang sekarang login TIDAK punya simbol ini — bot otomatis melewatinya dengan peringatan."
+    },
+    "XAUUSD247": {
+      "enabled": true,
+      "timeframe": "M5",
+      "max_positions": 3,
+      "risk_mult": 1.0,
+      "max_spread_points": 120,
+      "commission_price_units": 0.11,
+      "deviation_points": 40,
+      "lot_min_override": 0,
+      "lot_max_override": 0.5,
+      "_catatan": "Emas 24/7 (tanpa gap weekend, ikut trading Sabtu-Minggu). Harga bergerak SAMA dengan XAUUSD; eksposur ganda dicegah oleh risk.max_total_risk_pct."
+    }
+  },
+  "strategy": {
+    "atr_period": 14,
+    "entry": {
+      "name": "ema_cross",
+      "fast": 8,
+      "slow": 21
+    },
+    "filters": [
+      {
+        "name": "rsi_momentum",
+        "enabled": true,
+        "period": 14,
+        "long_min": 50,
+        "long_max": 70,
+        "short_min": 30,
+        "short_max": 50
+      },
+      {
+        "name": "atr_band",
+        "enabled": true,
+        "period": 14,
+        "window": 288,
+        "min_pct": 0.4,
+        "max_pct": 0.95
+      },
+      {
+        "name": "trend_ema",
+        "enabled": true,
+        "period": 200
+      }
+    ]
+  },
+  "exit": {
+    "sl_atr": 1.5,
+    "tp_atr": 0,
+    "_tp_catatan": "0 = tanpa TP tetap, keluar lewat trailing adaptif / sinyal berlawanan / batas waktu.",
+    "be_trigger_atr": 0.8,
+    "be_lock_atr": 0.1,
+    "trail_start_atr": 1.0,
+    "trail_atr": 1.2,
+    "trail_tight_after_atr": 2.5,
+    "trail_tight_atr": 0.6,
+    "_trail_catatan": "Jarak trailing = trail_atr x ATR TERKINI (dihitung ulang tiap siklus), mengetat ke trail_tight_atr setelah profit >= trail_tight_after_atr x ATR.",
+    "close_on_opposite_signal": true,
+    "max_hold_bars": 36
+  },
+  "sessions": {
+    "asia": {
+      "enabled": true,
+      "start_utc": 0,
+      "end_utc": 7
+    },
+    "london": {
+      "enabled": true,
+      "start_utc": 7,
+      "end_utc": 12
+    },
+    "newyork": {
+      "enabled": true,
+      "start_utc": 12,
+      "end_utc": 20
+    },
+    "late": {
+      "enabled": false,
+      "start_utc": 20,
+      "end_utc": 24
+    }
+  },
+  "smc": {
+    "filter_mode": "score",
+    "swing_k": 3,
+    "_catatan": "Seberapa ketat konfluensi Smart Money Concepts memengaruhi entry. off = diabaikan. score = hanya dihitung, digambar & jadi fitur pembelajaran (TIDAK mengubah entry) <- default. prefer = entry melawan bias struktur tetap boleh tapi burst dikecilkan jadi 1 tiket. strict = entry WAJIB searah bias struktur. Backtest 12 bln: score PF 1.37 | prefer PF 1.30 | strict PF 1.22 (lebih buruk) — jangan ubah tanpa backtest ulang."
+  },
+  "learning": {
+    "enabled": true,
+    "mode": "observe",
+    "min_confidence": 0.45,
+    "retrain_every": 20,
+    "min_samples": 100,
+    "live_weight": 3.0,
+    "l2": 2.0,
+    "_catatan": "observe = model dilatih ulang & skor keyakinan tiap entry ditampilkan, TIDAK menolak entry <- default. gate = entry dengan skor < min_confidence ditolak (paper/demo bebas; LIVE hanya kalau backtest --learning membuktikan gate membantu, hasil <= 30 hari). Validasi walk-forward saat ini: gate TIDAK terbukti membantu."
+  },
+  "bridge": {
+    "folder": "XAUUSD_EXNESS",
+    "timeframes": [
+      "M1",
+      "M5",
+      "M15",
+      "M30",
+      "H1"
+    ],
+    "symbols": [],
+    "interval_sec": 2,
+    "bars": 300,
+    "max_candle_labels": 40,
+    "layers": {
+      "candle": true,
+      "doji": false,
+      "chart": true,
+      "sr": true,
+      "trend": true,
+      "ob": true,
+      "fvg": true,
+      "bos": true,
+      "liq": true,
+      "entry": true
+    },
+    "_catatan": "Engine bridge (python -m bot.bridge) menulis objek analisis ke folder MT5 Common/Files/XAUUSD_EXNESS untuk indikator mql5/XAUUSD_Bridge_Draw. symbols kosong = semua simbol aktif. layers = lapisan yang digambar di chart MT5 (tidak memengaruhi trading)."
+  },
+  "news_filter": {
+    "enabled": true,
+    "url": "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
+    "currencies": [
+      "USD"
+    ],
+    "impacts": [
+      "High"
+    ],
+    "minutes_before": 30,
+    "minutes_after": 30,
+    "refresh_hours": 6,
+    "fail_open": true,
+    "_catatan": "fail_open=true: kalau kalender gagal diunduh, bot TETAP jalan (dengan peringatan di log). Set false kalau ingin bot berhenti entry saat kalender tidak tersedia."
+  },
+  "backtest": {
+    "months": 12,
+    "timeframe": "M5",
+    "start_equity": 100000000,
+    "extra_slippage_points": 5
+  }
+}
