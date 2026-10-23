@@ -170,9 +170,9 @@
     "close_on_bb_mid": true,
     "_bb_mid_catatan": "true = take profit otomatis saat harga menyentuh garis tengah Bollinger Bands (SMA 20) ala Dark Venus",
     "bb_mid_runner": true,
-    "bb_mid_runner_count": 1,
+    "bb_mid_runner_count": 2,
     "bb_mid_runner_buffer_atr": 0.2,
-    "_hybrid_catatan": "Hybrid Exit: tiket 1 & 2 TP di BB Mid, tiket 3 runner SL+ di BB Mid & kejar Opposite Band"
+    "_hybrid_catatan": "Hybrid Exit: 1 tiket TP di BB Mid, 2 tiket hold runner SL+ di BB Mid & kejar Opposite Band"
   },
   "sessions": {
     "asia": {

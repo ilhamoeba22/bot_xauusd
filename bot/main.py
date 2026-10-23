@@ -619,8 +619,10 @@ class Bot:
                 same_pos = [pos for pos in self.ex.positions() if pos.symbol == p.symbol and pos.dir == p.dir]
                 use_runner = bool(ex.get("bb_mid_runner", True))
                 runner_map = self.st.setdefault("runner_tickets", {})
-                runner_ticket = max((pos.ticket for pos in same_pos), default=p.ticket)
-                is_runner = use_runner and ((p.ticket == runner_ticket and len(same_pos) > 1) or str(p.ticket) in runner_map)
+                sorted_tickets = [pos.ticket for pos in sorted(same_pos, key=lambda x: x.ticket)]
+                r_count = int(ex.get("bb_mid_runner_count", 2))
+                runner_tickets_set = set(sorted_tickets[-r_count:]) if len(sorted_tickets) > 1 else set()
+                is_runner = use_runner and ((p.ticket in runner_tickets_set) or str(p.ticket) in runner_map)
                 if is_runner:
                     runner_map[str(p.ticket)] = True
 
