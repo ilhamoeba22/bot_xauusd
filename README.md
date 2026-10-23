@@ -9,10 +9,10 @@ Repository: **[https://github.com/ilhamoeba22/bot_xauusd.git](https://github.com
 ## 🌟 Fitur Utama
 
 - **Multi-Strategy Architecture (Dapat Di-switch Real-Time)**:
-  - **Pure Zone Scalper (Bollinger Bands M3)**: Scalping pembalikan arah saat harga menyentuh batas luar zona (Support / Resistance), dilengkapi **Take Profit otomatis di Garis Tengah SMA 20** (`close_on_bb_mid`) dan pengunci profit **BE-LOCK (SL+)**.
+  - **Pure Zone Scalper (Bollinger Bands M3)**: Scalping pembalikan arah saat harga menyentuh batas luar zona (Support / Resistance), dilengkapi fitur canggih **Hybrid Split Exit** (Tiket 1 & 2 TP di Garis Tengah SMA 20 untuk kepastian win rate, Tiket 3 Runner dengan SL+ di SMA 20 mengejar Opposite Outer Band untuk memaksimalkan Risk-to-Reward).
+  - **Squeeze Filter (`min_bandwidth_atr`)**: Menolak entry saat pita Bollinger Bands menyempit rapat (*squeeze* < 1.5x ATR), memastikan potensi profit selalu sehat di atas spread.
   - **Smart Rejection Mode**: Filter Price Action cerdas pencegah "pisau jatuh" (*falling knife*) dan lilin *Marubozu* solid.
-  - **SMC Multi-Timeframe (M15 + M3)**: Deteksi Order Block M15 + konfirmasi CHoCH & FVG M3 dengan eksekusi Limit Order.
-  - **Candle Break & EMA Momentum**: Scalping cepat mengikuti ledakan volatilitas terarah.
+  - **Dukungan Multi-Tipe Akun (Cent USC & Standard)**: Teruji lancar di akun Cent (misal `XAUUSDc` di HF Markets Cent) maupun Standard USD/IDR dengan kalkulasi *pip value* otomatis native broker.
 - **Manajemen Risiko & Pengamanan Modal Berlapis**:
   - **Stop Loss Otomatis Disiplin (1.5x ATR)**: Membatasi risiko per tiket (~0.3% - 0.5% ekuitas) tanpa sistem *martingale* berbahaya.
   - **BE-LOCK / SL+ (Breakeven Lock)**: Begitu harga terapung profit $\ge 1.0\times$ ATR, Stop Loss otomatis dimajukan melewati harga entri (+0.15 ATR) untuk mengunci profit hijau.
