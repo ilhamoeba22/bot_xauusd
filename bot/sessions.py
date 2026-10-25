@@ -15,7 +15,9 @@ def session_allowed(hour_utc: int, sessions: dict, weekday=None, days=None):
     """-> (boleh_entry, nama_sesi). weekday 0=Senin..6=Minggu; days = hari yang diizinkan (None = semua)."""
     name = session_of(hour_utc, sessions)
     ok = name is not None and sessions[name].get("enabled", True)
-    if ok and days is not None and weekday is not None and weekday not in days:
+    # Pasar Forex/Gold buka untuk sesi Senin mulai Minggu 22:00 UTC (Senin 05:00 WIB)
+    eff_weekday = 0 if (weekday == 6 and hour_utc >= 22) else weekday
+    if ok and days is not None and eff_weekday is not None and eff_weekday not in days:
         return False, f"{name}, {DAY_NAMES[weekday]} tidak dijadwalkan"
     return ok, name
 
