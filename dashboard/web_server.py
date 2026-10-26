@@ -75,8 +75,10 @@ def _sync_loop():
         time.sleep(60)
 
 import re                                              # noqa: E402
-_LOCAL_HOST = re.compile(r"^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$", re.I)
-_LOCAL_ORIGIN = re.compile(r"^https?://(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$", re.I)
+_ALLOWED_HOST = re.compile(r"^(127\.0\.0\.1|localhost|\[::1\]|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$", re.I)
+_ALLOWED_ORIGIN = re.compile(r"^https?://(127\.0\.0\.1|localhost|\[::1\]|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$", re.I)
+_LOCAL_HOST = _ALLOWED_HOST
+_LOCAL_ORIGIN = _ALLOWED_ORIGIN
 WEB = Path(__file__).resolve().parent / "web"
 PORT = int(next((a.split("=")[1] for a in sys.argv if a.startswith("--port=")), 8765))
 TF = {"M1": mt5.TIMEFRAME_M1, "M3": mt5.TIMEFRAME_M3, "M5": mt5.TIMEFRAME_M5, "M15": mt5.TIMEFRAME_M15,
@@ -635,11 +637,15 @@ class H(BaseHTTPRequestHandler):
 
 
 def main():
-    srv = ThreadingHTTPServer(("127.0.0.1", PORT), H)
+    HOST = next((a.split("=")[1] for a in sys.argv if a.startswith("--host=")), "0.0.0.0")
+    srv = ThreadingHTTPServer((HOST, PORT), H)
     threading.Thread(target=_health_loop, daemon=True, name="health").start()
     threading.Thread(target=_sync_loop, daemon=True, name="datasync").start()
     url = f"http://127.0.0.1:{PORT}"
-    print(f"Dashboard web: {url}   (Ctrl+C untuk berhenti; bot tidak ikut berhenti)")
+    lan_url = f"http://192.168.1.83:{PORT}"
+    print(f"Dashboard web aktif di {HOST}:{PORT}")
+    print(f"  • Akses Lokal   : {url}")
+    print(f"  • Akses Jaringan: {lan_url} (dapat diakses dari 10.5.99.15)")
     if "--no-browser" not in sys.argv:
         threading.Timer(1.0, lambda: webbrowser.open(url)).start()
     try:
