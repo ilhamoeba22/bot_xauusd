@@ -847,7 +847,7 @@ class Bot:
             if (act_strat in ("bb_reversion", "dark_venus") or P.get("use_bb_reversion")) and cfg.get("strategy_bb_reversion"):
                 scfg = dict(cfg["strategy_bb_reversion"])
                 scfg["entry"] = dict(scfg["entry"], symbol=sym)
-            elif P.get("name") == "AGGRESSIVE" and P.get("use_smc_mtf") and cfg.get("strategy_aggressive"):
+            elif (act_strat in ("smc_mtf", "smc") or (P.get("name") == "AGGRESSIVE" and P.get("use_smc_mtf"))) and cfg.get("strategy_aggressive"):
                 scfg = dict(cfg["strategy_aggressive"])
                 # Teruskan nama simbol ke entry engine agar bisa fetch M15/M3 dari MT5
                 scfg["entry"] = dict(scfg["entry"], symbol=sym)

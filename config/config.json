@@ -23,13 +23,13 @@
     "max_risk_overshoot_mult": 2.0,
     "_overshoot_catatan": "Kalau lot minimum broker memaksa risiko > risk_per_trade_pct x angka ini, entry DILEWATI.",
     "max_positions_total": 6,
-    "daily_loss_limit_pct": 3.0,
+    "daily_loss_limit_pct": 5.0,
     "_daily_catatan": "Diukur dari P/L BOT INI SAJA (magic sendiri, tertutup + mengambang) terhadap equity awal hari. Tercapai -> semua posisi ditutup & bot berhenti entry sampai hari server berikutnya.",
     "max_drawdown_pct": 15.0,
     "_dd_catatan": "Diukur dari puncak equity yang pernah dicatat bot. Tercapai -> semua posisi ditutup, bot HALT sampai file logs/HALT dihapus (start_bot.cmd reset). 25 Sep: dinaikkan 12 -> 25 karena burst 10 (backtest max DD 22%) sudah menyentuh 12% di drawdown normal (12 Nov 2025). daily_loss_limit_pct SENGAJA tetap 3: dinaikkan ke 4-6% justru memperbesar DD ke 28-30% dan hari terburuk ke -8,4%.",
     "max_consecutive_losses": 4,
     "loss_pause_minutes": 60,
-    "burst_size": 2,
+    "burst_size": 1,
     "burst_mode": "multiply",
     "_burst_catatan": "multiply = tiap tiket membawa risk_per_trade_pct penuh (10 tiket x 0.15% = 1.5% per sinyal; riil ~1.9% karena lot minimum 0.01 ~0.19%/tiket di akun Zero), hanya SATU burst aktif per simbol. split = lot dibagi, total risiko tetap risk_per_trade_pct.",
     "max_total_risk_pct": 2.5,
@@ -69,7 +69,7 @@
       "_catatan": "Hanya ada di akun Standard CENT (saldo dalam USC). Akun 279718110 yang sekarang login TIDAK punya simbol ini â€” bot otomatis melewatinya dengan peringatan.",
       "max_spread_atr_pct": 25.0,
       "risk_group": "gold",
-      "strategy": "bb_reversion",
+      "strategy": "smc_mtf",
       "trade_days": [
         0,
         1,
@@ -379,7 +379,7 @@
       "AGGRESSIVE": {
         "min_score": 25,
         "smc_required": false,
-        "cooldown_min": 5,
+        "cooldown_min": 2,
         "intrabar_entry": false,
         "_intrabar_catatan": "SMC MTF memakai limit order (pending), bukan intrabar market order — dimatikan",
         "intrabar_confirm_sec": 20,
@@ -412,7 +412,7 @@
     "_skor_catatan": "28 Sep, 872 sinyal emas historis: skor>=25 lolos 97.5% PF 1.40 | >=40 74% PF 1.42 | >=50 58% PF 1.48 | >=60 48% PF 1.24 (lebih buruk) -> CONSERVATIVE 50.",
     "_intrabar_catatan": "29 Sep: entri candle berjalan butuh skor gabungan >= intrabar_min_score DAN komponen SMC >= intrabar_smc_min (tambahan di atas min_score). Alasan: 3/3 burst intrabar AGGRESSIVE (BTC SELL, SMC -1.0, skor 26-38) rugi -2,85jt. Entri bar-close tetap memakai min_score biasa (AGGRESSIVE 25). Set null/0 untuk menonaktifkan."
   },
-  "active_strategy": "bb_reversion",
+  "active_strategy": "smc_mtf",
   "_active_strategy_catatan": "smc_mtf = SMC Multi-Timeframe sniper | bb_reversion = Bollinger Bands Mean-Reversion (ala Dark Venus) | default = strategy utama",
   "strategy_bb_reversion": {
     "_catatan": "Strategi Bollinger Bands Pure Zone Reversion. Fade harga saat menyentuh zona batas luar Bollinger Bands (Support/Resistance).",
