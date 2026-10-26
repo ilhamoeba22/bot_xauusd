@@ -515,6 +515,7 @@ class Bot:
             # evaluasi per profil & per kombinasi skill (logs/trades_meta.csv)
             meta = self.st.get("ticket_meta", {}).pop(str(c["ticket"]), None) or {}
             self.st.get("ticket_exit", {}).pop(str(c["ticket"]), None)
+            self.st.get("runner_tickets", {}).pop(str(c["ticket"]), None)
             new = not META_PATH.exists()
             with open(META_PATH, "a", newline="", encoding="utf-8") as f:
                 w = csv.writer(f)
@@ -650,14 +651,20 @@ class Bot:
                     buf = float(ex.get("bb_mid_runner_buffer_atr", 0.2)) * a
                     if p.dir == 1 and cur >= mid_val:
                         target_sl = round(mid_val - buf, info.digits)
+                        be_sl = round(p.price_open + max(info.point * 15, 0.1 * a), info.digits)
+                        if (cur - p.price_open) > 0:
+                            target_sl = max(target_sl, be_sl)
                         if target_sl > p.price_open and (p.sl is None or target_sl > p.sl):
                             if self.ex.modify_sl(p, target_sl):
-                                log.info(f"TRAIL  {p.symbol} #{p.ticket} SL+MID  SL {p.sl} -> {target_sl} (Runner aktif mengejar Upper {upper_val:.2f})")
+                                log.info(f"TRAIL  {p.symbol} #{p.ticket} SL+MID  SL {p.sl} -> {target_sl} (Runner terlindungi BE/SL+ mengejar Upper {upper_val:.2f})")
                     elif p.dir == -1 and cur <= mid_val:
                         target_sl = round(mid_val + buf, info.digits)
+                        be_sl = round(p.price_open - max(info.point * 15, 0.1 * a), info.digits)
+                        if (p.price_open - cur) > 0:
+                            target_sl = min(target_sl, be_sl)
                         if target_sl < p.price_open and (p.sl is None or target_sl < p.sl or p.sl == 0):
                             if self.ex.modify_sl(p, target_sl):
-                                log.info(f"TRAIL  {p.symbol} #{p.ticket} SL+MID  SL {p.sl} -> {target_sl} (Runner aktif mengejar Lower {lower_val:.2f})")
+                                log.info(f"TRAIL  {p.symbol} #{p.ticket} SL+MID  SL {p.sl} -> {target_sl} (Runner terlindungi BE/SL+ mengejar Lower {lower_val:.2f})")
 
             # trailing ikut candle: SL ke low (BUY) / high (SELL) candle yang BARU tertutup, tidak pernah mundur
             if ex.get("candle_trail") and fav >= ex.get("candle_trail_after_atr", ex["be_trigger_atr"]) * a:
