@@ -75,8 +75,8 @@ def _sync_loop():
         time.sleep(60)
 
 import re                                              # noqa: E402
-_ALLOWED_HOST = re.compile(r"^(127\.0\.0\.1|localhost|\[::1\]|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$", re.I)
-_ALLOWED_ORIGIN = re.compile(r"^https?://(127\.0\.0\.1|localhost|\[::1\]|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$", re.I)
+_ALLOWED_HOST = re.compile(r"^(127\.0\.0\.1|localhost|\[::1\]|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|.*\.trycloudflare\.com|.*\.localhost\.run|.*\.pinggy\.link)(:\d+)?$", re.I)
+_ALLOWED_ORIGIN = re.compile(r"^https?://(127\.0\.0\.1|localhost|\[::1\]|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|.*\.trycloudflare\.com|.*\.localhost\.run|.*\.pinggy\.link)(:\d+)?$", re.I)
 _LOCAL_HOST = _ALLOWED_HOST
 _LOCAL_ORIGIN = _ALLOWED_ORIGIN
 WEB = Path(__file__).resolve().parent / "web"
