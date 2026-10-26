@@ -1468,40 +1468,53 @@ class Bot:
                 self.st.setdefault("last_entry_ts", {})[sym] = time.time()
                 return f"SMC MARKET ORDER @ {px_mkt:.2f} (SL {sl_dist_smc:.2f} | TP {tp_dist_smc:.2f} | {rr}R)", 1
 
-            # Pasang 1 limit order (SMC entry = 1 tiket presisi membawa alokasi risiko penuh Opsi 3)
+            # Pasang limit order (SMC entry: jika burst n > 1, pasang n tiket limit order)
             order_type = 2 if sig == 1 else 3   # ORDER_TYPE_BUY_LIMIT=2, SELL_LIMIT=3
             ttl_bars   = int(C["profile"].get("m3_fvg_ttl_bars", 10)) if hasattr(C["profile"], "get") else 10
             ttl_sec    = ttl_bars * 3 * 60       # M3 = 3 menit per bar
 
-            try:
-                po_id = self.ex.open_pending(
-                    sym=sym, order_type=order_type, lot=lot,
-                    price=round(entry_px, info.digits),
-                    sl=round(sl_px, info.digits),
-                    tp=tp_px, expiry_sec=ttl_sec,
-                    tag=self.ex.tag + "-smc"
-                )
-            except Exception as e:
-                log.warning(f"SMC MTF pending order gagal: {e}")
-                return f"SMC MTF: pending order error — {e}", 0
+            n_tickets = max(1, n)
+            lot_per_ticket = round(lot / n_tickets, 2)
+            step = info.volume_step
+            vmin = max(info.volume_min, sc.get("lot_min_override", 0) or 0)
+            lot_per_ticket = min(max(round(lot_per_ticket / step) * step, vmin), info.volume_max)
+            lot_per_ticket = round(lot_per_ticket, 2)
 
-            if not po_id:
+            placed = []
+            for k in range(n_tickets):
+                try:
+                    po_id = self.ex.open_pending(
+                        sym=sym, order_type=order_type, lot=lot_per_ticket,
+                        price=round(entry_px, info.digits),
+                        sl=round(sl_px, info.digits),
+                        tp=tp_px, expiry_sec=ttl_sec,
+                        tag=self.ex.tag + "-smc"
+                    )
+                    if po_id:
+                        ticket_num = po_id[0] if isinstance(po_id, tuple) else po_id
+                        self.st.setdefault("ticket_exit", {})[str(ticket_num)] = dict(
+                            C["exit"], trailing=self.skill("trailing"), is_smc=True
+                        )
+                        self.st.setdefault("ticket_burst", {})[str(ticket_num)] = key
+                        placed.append(ticket_num)
+                except Exception as e:
+                    log.warning(f"SMC MTF pending order [{k+1}/{n_tickets}] gagal: {e}")
+
+            if not placed:
                 return "SMC MTF: open_pending gagal (broker menolak?)", 0
 
-            ticket_num = po_id[0] if isinstance(po_id, tuple) else po_id
-            # Rekam exit config untuk pending order ini (akan aktif otomatis saat terisi)
-            self.st.setdefault("ticket_exit", {})[str(ticket_num)] = dict(
-                C["exit"], trailing=self.skill("trailing"), is_smc=True
-            )
+            b = self.st.setdefault("bursts", {}).setdefault(key, {"n": 0, "left": 0, "pnl": 0.0})
+            b["n"] += len(placed)
+            b["left"] += len(placed)
 
-            log.info(f"SMC-LMT {sym} {'BUY_LMT' if sig == 1 else 'SELL_LMT'} "
-                     f"{lot} lot @ {entry_px:.2f}  SL {sl_px:.2f}  TP {tp_px:.2f}  "
+            log.info(f"SMC-LMT {sym} {'BUY_LMT' if sig == 1 else 'SELL_LMT'} x{len(placed)} "
+                     f"{lot_per_ticket} lot/tiket @ {entry_px:.2f}  SL {sl_px:.2f}  TP {tp_px:.2f}  "
                      f"({rr}R | ATR {a:.2f})  OB[{smc_meta['ob_bottom']:.2f}-{smc_meta['ob_top']:.2f}]  "
                      f"FVG[{smc_meta['fvg_bottom']:.2f}-{smc_meta['fvg_top']:.2f}]  "
                      f"TTL {ttl_sec//60}min  spread {cur_spread}  sesi {ses}")
             self.st.setdefault("last_entry_bar", {})[sym] = bar_t
             self.st.setdefault("last_entry_ts", {})[sym] = time.time()
-            return f"SMC LIMIT ORDER @ {entry_px:.2f} (FVG 50% | SL {sl_dist_smc:.2f} | TP {tp_dist_smc:.2f} | {rr}R)", 1
+            return f"SMC LIMIT ORDER x{len(placed)} @ {entry_px:.2f} (FVG 50% | SL {sl_dist_smc:.2f} | TP {tp_dist_smc:.2f} | {rr}R)", len(placed)
 
         # ── Entry market order biasa (CONSERVATIVE / NORMAL / non-SMC) ─────────
         got = self.calc_lot(sym, sl_dist, eq, n)
