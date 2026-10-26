@@ -166,10 +166,10 @@
     "be_lock_atr": 0.15,
     "trail_start_atr": 1.2,
     "trail_atr": 0.8,
-    "trail_tight_after_atr": 2.2,
-    "trail_tight_atr": 0.6,
+    "trail_tight_after_atr": 2.0,
+    "trail_tight_atr": 0.5,
     "candle_trail": true,
-    "candle_trail_after_atr": 1.6,
+    "candle_trail_after_atr": 1.2,
     "candle_trail_buffer_atr": 0.15,
     "_candle_trail_catatan": "Profit bernapas bebas sampai >= 1.4 ATR, baru SL+ aktif kunci komisi/spread (+0.15 ATR) dan trailing adaptif mengikuti ekor candle M3 terbaru.",
     "_trail_catatan": "Jarak trailing awal 0.8 ATR, mengetat ke 0.4 ATR setelah profit >= 1.8 ATR (mengunci profit puncak tanpa tercekik noise).",
@@ -180,7 +180,8 @@
     "bb_mid_runner": true,
     "bb_mid_runner_count": 1,
     "bb_mid_runner_buffer_atr": 0.2,
-    "_hybrid_catatan": "Hybrid Exit: 1 tiket TP di BB Mid, 2 tiket hold runner SL+ di BB Mid & kejar Opposite Band"
+    "_hybrid_catatan": "Hybrid Exit: 1 tiket TP di BB Mid, 2 tiket hold runner SL+ di BB Mid & kejar Opposite Band",
+    "single_ticket_runner": true
   },
   "sessions": {
     "asia": {

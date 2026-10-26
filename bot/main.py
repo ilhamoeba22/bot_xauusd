@@ -621,8 +621,14 @@ class Bot:
                 use_runner = bool(ex.get("bb_mid_runner", True))
                 runner_map = self.st.setdefault("runner_tickets", {})
                 sorted_tickets = [pos.ticket for pos in sorted(same_pos, key=lambda x: x.ticket)]
-                r_count = int(ex.get("bb_mid_runner_count", 2))
-                runner_tickets_set = set(sorted_tickets[-r_count:]) if len(sorted_tickets) > 1 else set()
+                r_count = int(ex.get("bb_mid_runner_count", 1))
+                single_as_runner = bool(ex.get("single_ticket_runner", True))
+                if len(sorted_tickets) > 1:
+                    runner_tickets_set = set(sorted_tickets[-r_count:])
+                elif len(sorted_tickets) == 1 and single_as_runner:
+                    runner_tickets_set = set(sorted_tickets)
+                else:
+                    runner_tickets_set = set()
                 is_runner = use_runner and ((p.ticket in runner_tickets_set) or str(p.ticket) in runner_map)
                 if is_runner:
                     runner_map[str(p.ticket)] = True
@@ -657,6 +663,7 @@ class Bot:
                         if target_sl > p.price_open and (p.sl is None or target_sl > p.sl):
                             if self.ex.modify_sl(p, target_sl):
                                 log.info(f"TRAIL  {p.symbol} #{p.ticket} SL+MID  SL {p.sl} -> {target_sl} (Runner terlindungi BE/SL+ mengejar Upper {upper_val:.2f})")
+                                new = target_sl
                     elif p.dir == -1 and cur <= mid_val:
                         target_sl = round(mid_val + buf, info.digits)
                         be_sl = round(p.price_open - max(info.point * 15, 0.1 * a), info.digits)
@@ -665,6 +672,7 @@ class Bot:
                         if target_sl < p.price_open and (p.sl is None or target_sl < p.sl or p.sl == 0):
                             if self.ex.modify_sl(p, target_sl):
                                 log.info(f"TRAIL  {p.symbol} #{p.ticket} SL+MID  SL {p.sl} -> {target_sl} (Runner terlindungi BE/SL+ mengejar Lower {lower_val:.2f})")
+                                new = target_sl
 
             # trailing ikut candle: SL ke low (BUY) / high (SELL) candle yang BARU tertutup, tidak pernah mundur
             if ex.get("candle_trail") and fav >= ex.get("candle_trail_after_atr", ex["be_trigger_atr"]) * a:
